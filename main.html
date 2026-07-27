@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الرئيسية - المرحلة الرابعة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        body {
+            background-color: #0D1B2E;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .card {
+            background-color: #152238;
+            border: 1px solid #2A3F58;
+        }
+        .num-badge {
+            background-color: #1E3350;
+            border: 1px solid #C9A84C;
+            color: #C9A84C;
+        }
+        .tab-active {
+            border-bottom: 2px solid #C9A84C;
+            color: #C9A84C;
+        }
+        .tab-inactive {
+            color: #8899AA;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen" oncontextmenu="return false;">
+
+    <!-- الهيدر -->
+    <header class="flex justify-between items-center p-5 bg-[#0D1B2E] border-b border-[#1E3350]">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-2xl">🧲</div>
+            <div>
+                <h1 class="text-xl font-bold">الرنين</h1>
+                <p id="quiz-count" class="text-xs text-[#8899AA]">جاري التحميل...</p>
+            </div>
+        </div>
+        <div class="text-2xl cursor-pointer" onclick="logout()">🚪</div>
+    </header>
+
+    <!-- شريط التبويبات (كمثال للمواد) -->
+    <div class="flex overflow-x-auto bg-[#0D1B2E] border-b border-[#1E3350] p-2 whitespace-nowrap">
+        <button onclick="loadQuizzes('c1_ranin')" class="px-4 py-2 font-bold tab-active">رنين</button>
+        <button onclick="loadQuizzes('c1_mafras')" class="px-4 py-2 font-bold tab-inactive">مفراس</button>
+        <button onclick="loadQuizzes('c1_sonar')" class="px-4 py-2 font-bold tab-inactive">سونار</button>
+    </div>
+
+    <!-- حاوية الكوزات -->
+    <main id="quizzes-container" class="flex-1 p-4 overflow-y-auto pb-20">
+        <!-- الكاردات راح تنزل هنا برمجياً -->
+        <div class="text-center mt-10 text-[#8899AA]">جاري جلب المحاضرات...</div>
+    </main>
+
+    <script>
+        // ⚠️ ضع مفاتيح الفايربيس الخاصة بك هنا
+        const firebaseConfig = {
+  apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
+  authDomain: "ministquiz.firebaseapp.com",
+  databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
+  projectId: "ministquiz",
+  storageBucket: "ministquiz.firebasestorage.app",
+  messagingSenderId: "97927221272",
+  appId: "1:97927221272:web:412147e2da692cb946f36d",
+  measurementId: "G-7ZH4XECTE5"
+};
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // حماية الصفحة: طرد المستخدم إذا ما مسجل دخول
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "index.html";
+            } else {
+                loadQuizzes('c1_ranin'); // تحميل كوزات الرنين كافتراضي
+            }
+        });
+
+        // دالة جلب الكوزات من الفايربيس
+        function loadQuizzes(category) {
+            const container = document.getElementById('quizzes-container');
+            container.innerHTML = '<div class="text-center mt-10 text-[#8899AA]">جاري التحميل...</div>';
+
+            db.ref('quizzes').orderByChild('category').equalTo(category).once('value', (snapshot) => {
+                container.innerHTML = '';
+                let quizzes = [];
+                snapshot.forEach((child) => {
+                    let quiz = child.val();
+                    quiz.id = child.key;
+                    if (quiz.active) quizzes.push(quiz);
+                });
+
+                document.getElementById('quiz-count').innerText = quizzes.length + ' محاضرة';
+
+                if (quizzes.length === 0) {
+                    container.innerHTML = `
+                        <div class="card rounded-2xl p-10 flex flex-col items-center justify-center mt-10">
+                            <div class="text-4xl mb-4">📂</div>
+                            <p class="text-[#556677]">لا توجد محاضرات بعد</p>
+                        </div>`;
+                    return;
+                }
+
+                // عكس المصفوفة حتى تظهر الكوزات الأحدث لي فوك (نفس الأندرويد)
+                quizzes.reverse().forEach((quiz, index) => {
+                    const title = quiz.quizDisplayTitle || quiz.title || quiz.fileName.replace('.html', '');
+                    const freeTag = quiz.isFree ? '<span class="text-xs text-green-400"> | 🆓 مجاني</span>' : '';
+                    
+                    const cardHTML = `
+                        <div onclick="openQuiz('${quiz.id}', ${quiz.isFree})" class="card rounded-2xl p-4 mb-3 flex items-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="num-badge w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm">
+                                ${index + 1}
+                            </div>
+                            <div class="flex-1 mr-4 text-right">
+                                <h2 class="font-bold text-lg">${title}</h2>
+                                <p class="text-xs text-[#C9A84C] mt-1">📖 ${quiz.date || ''} ${freeTag}</p>
+                            </div>
+                            <div class="text-[#556677] text-sm">❯</div>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', cardHTML);
+                });
+            });
+        }
+
+        // دالة فتح الكوز
+        function openQuiz(quizId, isFree) {
+            // هنا تكدر تضيف فحص حالة الدفع (إذا دافع يعبر، إذا لا وكوز مو مجاني تطلعله رسالة)
+            const isPaid = localStorage.getItem('isPaid') === 'true';
+            
+            if (isFree || isPaid) {
+                // توجيه لصفحة الـ WebView مالت الويب (راح نبرمجها بعدين)
+                window.location.href = `quiz.html?id=${quizId}`;
+            } else {
+                alert("محتوى مقفول 🔒\nهذا الاختبار متاح للمشتركين فقط.");
+            }
+        }
+
+        // تسجيل الخروج
+        function logout() {
+            auth.signOut().then(() => {
+                localStorage.clear();
+                window.location.href = "index.html";
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تسجيل الدخول - المرحلة الرابعة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- تضمين مكتبات الفايربيس (الإصدار الثامن للسهولة) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        /* أكواد منع النسخ والتحديد */
+        body {
+            background-color: #0D1B2E;
+            color: white;
+            user-select: none; /* منع تحديد النص */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none; /* منع القائمة المنبثقة بالايفون */
+        }
+        .input-field {
+            background-color: #152238;
+            border: 1px solid #2A3F58;
+            color: white;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #C9A84C;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-6" oncontextmenu="return false;">
+
+    <div class="w-full max-w-md flex flex-col gap-5">
+        <h1 class="text-2xl font-bold text-center mb-6">تسجيل الدخول</h1>
+
+        <input type="email" id="email" placeholder="البريد الإلكتروني" class="input-field w-full rounded-xl p-4 text-right">
+        <input type="password" id="password" placeholder="كلمة المرور" class="input-field w-full rounded-xl p-4 text-right">
+
+        <p id="error-msg" class="text-red-500 text-sm text-center hidden"></p>
+
+        <button id="btnLogin" onclick="login()" class="w-full bg-[#C9A84C] text-[#0D1B2E] font-bold rounded-xl p-4 mt-4">
+            تسجيل الدخول
+        </button>
+        <button id="btnRegister" onclick="register()" class="w-full bg-[#1E3350] text-white font-bold rounded-xl p-4">
+            إنشاء حساب جديد
+        </button>
+    </div>
+
+    <script>
+        // ⚠️ ضع مفاتيح الفايربيس الخاصة بك هنا
+        const firebaseConfig = {
+  apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
+  authDomain: "ministquiz.firebaseapp.com",
+  databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
+  projectId: "ministquiz",
+  storageBucket: "ministquiz.firebasestorage.app",
+  messagingSenderId: "97927221272",
+  appId: "1:97927221272:web:412147e2da692cb946f36d",
+  measurementId: "G-7ZH4XECTE5"
+};
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // منع اختصارات الكيبورد (F12, Ctrl+Shift+I, Ctrl+U, Ctrl+C)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || 
+               (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+               (e.ctrlKey && e.key === 'U') || 
+               (e.ctrlKey && e.key === 'C')) {
+                e.preventDefault();
+            }
+        });
+
+        function showError(msg) {
+            const errorP = document.getElementById('error-msg');
+            errorP.innerText = msg;
+            errorP.classList.remove('hidden');
+        }
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            if(!email || !pass) return showError("يرجى إدخال الإيميل والباسورد");
+            
+            document.getElementById('btnLogin').innerText = "جاري التحميل...";
+            auth.signInWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    checkUserStatus(userCredential.user.uid);
+                })
+                .catch((error) => {
+                    document.getElementById('btnLogin').innerText = "تسجيل الدخول";
+                    showError("خطأ: " + error.message);
+                });
+        }
+
+        function checkUserStatus(uid) {
+            // فحص حالة الطالب بالداتا بيس (دافع أو لا)
+            db.ref('students/' + uid).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    // التوجيه للصفحة الرئيسية
+                    window.location.href = "main.html"; 
+                } else {
+                    showError("الحساب غير مسجل في قاعدة البيانات");
+                }
+            });
+        }
+
+        // دالة التسجيل يمكن إضافتها بنفس المنطق
+        function register() {
+            alert("سيتم توجيهك لصفحة إنشاء الحساب...");
+        }
+    </script>
+</body>
+</html>

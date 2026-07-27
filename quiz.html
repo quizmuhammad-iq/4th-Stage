@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الاختبار - المرحلة الرابعة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0D1B2E;
+            overflow: hidden; /* منع التمرير الخارجي */
+            /* أكواد منع النسخ */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        #timer-banner {
+            background-color: #F44336;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 50;
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: calc(100vh - 52px); /* ملء الشاشة عدا مساحة المؤقت */
+            border: none;
+            background-color: white;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="timer-banner" class="hidden">جاري تحميل الوقت...</div>
+    <iframe id="quiz-frame" src=""></iframe>
+
+    <script>
+        // ⚠️ ضع مفاتيح الفايربيس الخاصة بك هنا
+        const firebaseConfig = {
+  apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
+  authDomain: "ministquiz.firebaseapp.com",
+  databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
+  projectId: "ministquiz",
+  storageBucket: "ministquiz.firebasestorage.app",
+  messagingSenderId: "97927221272",
+  appId: "1:97927221272:web:412147e2da692cb946f36d",
+  measurementId: "G-7ZH4XECTE5"
+};
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let timerInterval;
+        let scoreSubmitted = false;
+
+        // منع اختصارات الكيبورد مالت النسخ والفحص
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || 
+               (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+               (e.ctrlKey && e.key === 'U') || 
+               (e.ctrlKey && e.key === 'C') ||
+               (e.ctrlKey && e.key === 'P')) {
+                e.preventDefault();
+            }
+        });
+
+        // سحب ID الكوز من الرابط
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizId = urlParams.get('id');
+
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "index.html";
+            } else if (quizId) {
+                loadQuizData(quizId);
+            } else {
+                alert("لم يتم تحديد كوز!");
+                window.location.href = "main.html";
+            }
+        });
+
+        function loadQuizData(id) {
+            db.ref('quizzes/' + id).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    let quiz = snapshot.val();
+                    document.title = quiz.title || 'اختبار';
+                    
+                    // تشغيل الكوز بداخل النافذة
+                    document.getElementById('quiz-frame').src = quiz.fileUrl;
+                    
+                    // إذا اكو وقت، شغل العداد
+                    if (quiz.duration && quiz.duration > 0) {
+                        startTimer(quiz.duration);
+                    }
+                } else {
+                    alert("هذا الاختبار غير موجود أو تم حذفه.");
+                    window.location.href = "main.html";
+                }
+            });
+        }
+
+        function startTimer(minutes) {
+            const banner = document.getElementById('timer-banner');
+            banner.classList.remove('hidden');
+            let timeRemaining = minutes * 60; // تحويل للدقائق
+
+            timerInterval = setInterval(() => {
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    banner.innerText = "انتهى الوقت!";
+                    forceSubmit();
+                } else {
+                    let m = Math.floor(timeRemaining / 60);
+                    let s = timeRemaining % 60;
+                    // تنسيق الوقت مثل الأندرويد 00:00
+                    banner.innerText = `الوقت المتبقي: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                    timeRemaining--;
+                }
+            }, 1000);
+        }
+
+        function forceSubmit() {
+            if (scoreSubmitted) return;
+            scoreSubmitted = true;
+            
+            // بما أن الويب يمنع التحكم المباشر بملف iframe من نطاق ثاني لأسباب أمنية
+            // يتم تنبيه الطالب وسحب الدفتر برمجياً عن طريق التوجيه
+            alert("انتهى الوقت! تم سحب الدفتر وإغلاق الاختبار.");
+            window.location.href = "main.html";
+        }
+    </script>
+</body>
+</html>
