@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تفعيل التطبيق - المرحلة الرابعة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        body {
+            background-color: #0D1B2E;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .card { background-color: #152238; border: 1px solid #2A3F58; }
+        .input-field { background-color: #152238; border: 1px solid #2A3F58; color: white; }
+        .input-field:focus { outline: none; border-color: #C9A84C; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-6" oncontextmenu="return false;">
+
+    <div class="w-full max-w-md flex flex-col gap-5 items-center">
+        <div class="text-5xl mb-2">🔒</div>
+        <h1 class="text-2xl font-bold text-center mb-4">تفعيل التطبيق</h1>
+
+        <div class="card rounded-2xl p-5 w-full text-center">
+            <p class="text-[#AABBCC] text-sm leading-relaxed mb-4">
+                التطبيق يحتاج شراء كود تفعيل لكي يعمل<br><br>
+                سعر كود التفعيل 3000 دينار تدفع لمرة واحدة<br><br>
+                قم بمراسلة المطور لشراء كود التفعيل
+            </p>
+            <a href="https://t.me/f_8e5" target="_blank" class="w-full bg-[#29B6F6] text-white font-bold py-3 rounded-xl flex justify-center items-center">
+                مراسلة المطور
+            </a>
+        </div>
+
+        <input type="text" id="activation-code" placeholder="أدخل كود التفعيل هنا" class="input-field w-full rounded-xl p-4 text-center font-bold text-lg uppercase mt-4">
+
+        <p id="error-msg" class="text-red-500 text-sm text-center hidden"></p>
+
+        <button id="btnActivate" onclick="activateAccount()" class="w-full bg-[#C9A84C] text-[#0D1B2E] font-bold rounded-xl p-4">
+            تفعيل التطبيق
+        </button>
+
+        <button onclick="goToMain()" class="text-[#8899AA] text-sm mt-4">
+            تخطي والمتابعة بالنسخة المجانية ❯
+        </button>
+    </div>
+
+    <script>
+        // ⚠️ ضع مفاتيح الفايربيس الخاصة بك هنا
+        const firebaseConfig = {
+            apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
+            authDomain: "ministquiz.firebaseapp.com",
+            databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
+            projectId: "ministquiz",
+            storageBucket: "ministquiz.firebasestorage.app",
+            messagingSenderId: "97927221272",
+            appId: "1:97927221272:web:412147e2da692cb946f36d",
+            measurementId: "G-7ZH4XECTE5"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        
+        const auth = firebase.auth();
+        const db = firebase.database();
+        let currentUserUid = null;
+
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "index.html";
+            } else {
+                currentUserUid = user.uid;
+            }
+        });
+
+        function showError(msg) {
+            const errorP = document.getElementById('error-msg');
+            errorP.innerText = msg;
+            errorP.classList.remove('hidden');
+        }
+
+        function activateAccount() {
+            const codeInput = document.getElementById('activation-code').value.trim().toUpperCase();
+            if (!codeInput) return showError("أدخل الكود أولاً");
+            if (!currentUserUid) return showError("يجب تسجيل الدخول أولاً");
+
+            const btn = document.getElementById('btnActivate');
+            btn.innerText = "جاري التحقق...";
+            btn.disabled = true;
+
+            const codeRef = db.ref('activation_codes/' + codeInput);
+            codeRef.once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const codeData = snapshot.val();
+                    if (codeData.used === false) {
+                        // تحديث حالة الكود وتفعيل الطالب بنفس الوقت
+                        let updates = {};
+                        updates['activation_codes/' + codeInput + '/used'] = true;
+                        updates['activation_codes/' + codeInput + '/usedBy'] = currentUserUid;
+                        updates['students/' + currentUserUid + '/isPaid'] = true;
+
+                        db.ref().update(updates).then(() => {
+                            localStorage.setItem('isPaid', 'true');
+                            alert("✅ مبارك، تم التفعيل بنجاح!");
+                            window.location.href = "main.html";
+                        }).catch((error) => {
+                            btn.innerText = "تفعيل التطبيق";
+                            btn.disabled = false;
+                            showError("فشل التفعيل: " + error.message);
+                        });
+                    } else {
+                        btn.innerText = "تفعيل التطبيق";
+                        btn.disabled = false;
+                        showError("هذا الكود مستخدم مسبقاً.");
+                    }
+                } else {
+                    btn.innerText = "تفعيل التطبيق";
+                    btn.disabled = false;
+                    showError("كود التفعيل غير صحيح.");
+                }
+            }).catch((error) => {
+                btn.innerText = "تفعيل التطبيق";
+                btn.disabled = false;
+                showError("خطأ في الاتصال: " + error.message);
+            });
+        }
+
+        function goToMain() {
+            window.location.href = "main.html";
+        }
+    </script>
+</body>
+</html>
