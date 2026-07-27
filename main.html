@@ -193,10 +193,11 @@
 
                 quizzes.reverse().forEach((quiz, index) => {
                     const title = quiz.quizDisplayTitle || quiz.title || quiz.fileName.replace('.html', '');
-                    const freeTag = quiz.isFree ? '<span class="text-xs text-green-400"> | 🆓 مجاني</span>' : '';
+                    // التعديل هنا: غيرنا isFree إلى free حتى تطابق الفايربيس مالتك
+const freeTag = quiz.free ? '<span class="text-xs text-green-400"> | 🆓 مجاني</span>' : '';
                     
-                    const cardHTML = `
-                        <div onclick="openQuiz('${quiz.id}', ${quiz.isFree})" class="card rounded-2xl p-4 mb-3 flex items-center cursor-pointer active:scale-95 transition-transform">
+const cardHTML = `
+    <div onclick="openQuiz('${quiz.id}', ${quiz.free || false})" class="card rounded-2xl p-4 mb-3 flex items-center cursor-pointer active:scale-95 transition-transform">
                             <div class="num-badge w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm">${index + 1}</div>
                             <div class="flex-1 mr-4 text-right">
                                 <h2 class="font-bold text-lg">${title}</h2>
@@ -237,12 +238,13 @@
             `;
         }
 
-        function openQuiz(quizId, isFree) {
+       function openQuiz(quizId, isFree) {
             const isPaid = localStorage.getItem('isPaid') === 'true';
             if (isFree || isPaid) {
                 window.location.href = `quiz.html?id=${quizId}`;
             } else {
-                alert("محتوى مقفول 🔒\nهذا الاختبار متاح للمشتركين فقط.");
+                // التعديل: تحويل الطالب لواجهة الدفع بدل التنبيه المزعج
+                window.location.href = "payment.html";
             }
         }
 
