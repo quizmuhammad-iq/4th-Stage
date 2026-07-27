@@ -4,14 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>الاختبار - المرحلة الرابعة</title>
-    <!-- أيقونة التطبيق للايفون -->
-<link rel="apple-touch-icon" href="icon.png">
-<!-- تفعيل وضع الشاشة الكاملة (إخفاء شريط المتصفح) -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<!-- تغيير لون شريط الإشعارات العلوي ليناسب تصميمك -->
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- اسم التطبيق اللي يظهر تحت الأيقونة -->
-<meta name="apple-mobile-web-app-title" content="كوزات المرحلة الرابعة">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -148,6 +140,60 @@
             // يتم تنبيه الطالب وسحب الدفتر برمجياً عن طريق التوجيه
             alert("انتهى الوقت! تم سحب الدفتر وإغلاق الاختبار.");
             window.location.href = "main.html";
+        }
+		// الاستماع للنتيجة القادمة من نافذة الكوز (iframe)
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'QUIZ_FINISHED') {
+                const score = event.data.score; // النسبة المئوية
+                const correctCount = event.data.correctAnswers || 0; // عدد الصح
+                
+                // إيقاف العداد إذا كان شغال
+                if(timerInterval) clearInterval(timerInterval);
+                
+                saveResultToFirebase(score, correctCount);
+            }
+        });
+
+        function saveResultToFirebase(score, correctCount) {
+            const uid = auth.currentUser.uid;
+            const banner = document.getElementById('timer-banner');
+            banner.classList.remove('hidden');
+            banner.innerText = "جاري رفع النتيجة للفايربيس...";
+            banner.style.backgroundColor = "#4CAF50"; // أخضر
+
+            // 1. تحديث إحصائيات الطالب (نفس المتغيرات اللي قرأناها بـ stats.html)
+            db.ref('students/' + uid).once('value').then((snapshot) => {
+                let data = snapshot.val() || {};
+                let oldQuizzes = data.completedQuizzes || 0;
+                let oldCorrect = data.totalCorrectAnswers || 0;
+                let oldAvg = data.averageScore || 0;
+
+                let newQuizzes = oldQuizzes + 1;
+                let newCorrect = oldCorrect + correctCount;
+                // حساب المعدل التراكمي الجديد
+                let newAvg = Math.round(((oldAvg * oldQuizzes) + score) / newQuizzes);
+
+                let updates = {};
+                updates['students/' + uid + '/completedQuizzes'] = newQuizzes;
+                updates['students/' + uid + '/totalCorrectAnswers'] = newCorrect;
+                updates['students/' + uid + '/averageScore'] = newAvg;
+
+                // 2. تحديث لوحة الصدارة (نضيف الدرجة الجديدة لمجموع درجاته)
+                let oldTotalScore = data.totalScore || 0;
+                let newTotalScore = oldTotalScore + score;
+                updates['students/' + uid + '/totalScore'] = newTotalScore;
+                
+                updates['public_leaderboard/' + uid + '/score'] = newTotalScore;
+                updates['public_leaderboard/' + uid + '/name'] = data.name || "طالب المرحلة الرابعة";
+
+                // رفع كل التحديثات دفعة واحدة
+                db.ref().update(updates).then(() => {
+                    alert("✅ تم رفع نتيجتك بنجاح: " + score + "%");
+                    window.location.href = "main.html";
+                }).catch((error) => {
+                    alert("❌ فشل الرفع: " + error.message);
+                });
+            });
         }
     </script>
 </body>
