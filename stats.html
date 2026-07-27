@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إحصائياتي - المرحلة الرابعة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        body {
+            background-color: #0D1B2E;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .card { background-color: #152238; border: 1px solid #2A3F58; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen" oncontextmenu="return false;">
+
+    <!-- الهيدر -->
+    <header class="flex justify-between items-center p-4 bg-[#0D1B2E] border-b border-[#1E3350] sticky top-0">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-[#29B6F6] rounded-2xl flex items-center justify-center text-2xl text-white">📊</div>
+            <div>
+                <h1 class="text-xl font-bold">إحصائياتي الشخصية</h1>
+                <p class="text-xs text-[#8899AA]">ملخص أدائك العام</p>
+            </div>
+        </div>
+        <button onclick="window.location.href='main.html'" class="text-2xl cursor-pointer bg-[#152238] w-10 h-10 rounded-full flex items-center justify-center border border-[#2A3F58]">
+            ❮
+        </button>
+    </header>
+
+    <!-- حاوية الإحصائيات -->
+    <main class="flex-1 p-4 flex flex-col gap-4 mt-4">
+        <div class="card rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg">
+            <h2 class="text-[#8899AA] text-sm mb-2 font-bold">إجمالي المحاضرات المنجزة</h2>
+            <p id="total-quizzes" class="text-5xl font-bold text-[#C9A84C]">0</p>
+        </div>
+        
+        <div class="card rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg">
+            <h2 class="text-[#8899AA] text-sm mb-2 font-bold">إجمالي الإجابات الصحيحة</h2>
+            <p id="correct-answers" class="text-5xl font-bold text-green-400">0</p>
+        </div>
+
+        <div class="card rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg">
+            <h2 class="text-[#8899AA] text-sm mb-2 font-bold">معدلك العام</h2>
+            <p id="avg-score" class="text-5xl font-bold text-blue-400">0%</p>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
+            authDomain: "ministquiz.firebaseapp.com",
+            databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
+            projectId: "ministquiz",
+            storageBucket: "ministquiz.firebasestorage.app",
+            messagingSenderId: "97927221272",
+            appId: "1:97927221272:web:412147e2da692cb946f36d",
+            measurementId: "G-7ZH4XECTE5"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                loadPersonalStats(user.uid);
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        function loadPersonalStats(uid) {
+            // سحب بيانات الطالب من عقدة students
+            db.ref('students/' + uid).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const studentData = snapshot.val();
+                    
+                    // تأكد أن أسماء المتغيرات تطابق ما تحفظه في برنامج الأندرويد
+                    document.getElementById('total-quizzes').innerText = studentData.completedQuizzes || 0;
+                    document.getElementById('correct-answers').innerText = studentData.totalCorrectAnswers || 0;
+                    
+                    let avg = studentData.averageScore || 0;
+                    document.getElementById('avg-score').innerText = avg + '%';
+                }
+            }).catch((error) => {
+                alert("حدث خطأ في جلب الإحصائيات: " + error.message);
+            });
+        }
+    </script>
+</body>
+</html>
