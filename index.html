@@ -107,10 +107,14 @@
         }
 
         function checkUserStatus(uid) {
-            // فحص حالة الطالب بالداتا بيس (دافع أو لا)
             db.ref('students/' + uid).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
-                    // التوجيه للصفحة الرئيسية
+                    const data = snapshot.val();
+                    if (data.isPaid === true) {
+                        localStorage.setItem('isPaid', 'true');
+                    } else {
+                        localStorage.setItem('isPaid', 'false');
+                    }
                     window.location.href = "main.html"; 
                 } else {
                     showError("الحساب غير مسجل في قاعدة البيانات");
