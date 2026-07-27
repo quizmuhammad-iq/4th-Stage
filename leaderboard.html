@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة الصدارة - المرحلة الرابعة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        body {
+            background-color: #0D1B2E;
+            color: white;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .card { background-color: #152238; border: 1px solid #2A3F58; }
+        
+        /* ألوان المراكز الأولى */
+        .rank-1 { background-color: #FFD700; color: #0D1B2E; border: none; } /* ذهبي */
+        .rank-2 { background-color: #C0C0C0; color: #0D1B2E; border: none; } /* فضي */
+        .rank-3 { background-color: #CD7F32; color: #0D1B2E; border: none; } /* برونزي */
+        .rank-normal { background-color: #1E3350; border: 1px solid #C9A84C; color: #C9A84C; }
+        
+        /* إخفاء شريط التمرير */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen" oncontextmenu="return false;">
+
+    <!-- الهيدر -->
+    <header class="flex justify-between items-center p-4 bg-[#0D1B2E] border-b border-[#1E3350] sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-[#C9A84C] rounded-2xl flex items-center justify-center text-2xl text-[#0D1B2E]">🏆</div>
+            <div>
+                <h1 class="text-xl font-bold">لوحة الصدارة</h1>
+                <p class="text-xs text-[#8899AA]">أفضل 50 طالب</p>
+            </div>
+        </div>
+        <button onclick="window.location.href='main.html'" class="text-2xl cursor-pointer bg-[#152238] w-10 h-10 rounded-full flex items-center justify-center border border-[#2A3F58]">
+            ❮
+        </button>
+    </header>
+
+    <!-- حاوية قائمة الصدارة -->
+    <main id="leaderboard-container" class="flex-1 p-4 overflow-y-auto pb-10">
+        <div class="text-center mt-10 text-[#8899AA] font-bold">جاري سحب درجات الأبطال...</div>
+    </main>
+
+    <script>
+        // ⚠️ مفاتيح الفايربيس مالتك
+        const firebaseConfig = {
+            apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
+            authDomain: "ministquiz.firebaseapp.com",
+            databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
+            projectId: "ministquiz",
+            storageBucket: "ministquiz.firebasestorage.app",
+            messagingSenderId: "97927221272",
+            appId: "1:97927221272:web:412147e2da692cb946f36d",
+            measurementId: "G-7ZH4XECTE5"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        
+        const db = firebase.database();
+
+        function loadLeaderboard() {
+            const container = document.getElementById('leaderboard-container');
+            
+            // سحب أفضل 50 طالب بناءً على حقل الدرجة (نفترض اسمه score)
+            // الفايربيس يرتب تصاعدي، لذلك نسحب آخر 50 وبعدين نعكسهم بالجافا سكريبت
+            db.ref('public_leaderboard').orderByChild('score').limitToLast(50).once('value')
+            .then((snapshot) => {
+                container.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    container.innerHTML = `
+                        <div class="card rounded-2xl p-10 flex flex-col items-center justify-center mt-10">
+                            <div class="text-4xl mb-4">📭</div>
+                            <p class="text-[#556677]">لوحة الصدارة فارغة حالياً</p>
+                        </div>`;
+                    return;
+                }
+
+                let students = [];
+                snapshot.forEach((child) => {
+                    let student = child.val();
+                    students.push(student);
+                });
+
+                // عكس المصفوفة حتى يصير صاحب أعلى درجة بالبداية
+                students.reverse();
+
+                students.forEach((student, index) => {
+                    let rankClass = "rank-normal";
+                    let rankIcon = "";
+                    
+                    if (index === 0) { rankClass = "rank-1"; rankIcon = "🥇"; }
+                    else if (index === 1) { rankClass = "rank-2"; rankIcon = "🥈"; }
+                    else if (index === 2) { rankClass = "rank-3"; rankIcon = "🥉"; }
+
+                    const name = student.name || "طالب مجهول";
+                    const score = student.score || 0;
+                    
+                    const cardHTML = `
+                        <div class="card rounded-2xl p-4 mb-3 flex items-center shadow-lg transition-transform">
+                            <div class="${rankClass} w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
+                                ${index > 2 ? index + 1 : rankIcon}
+                            </div>
+                            <div class="flex-1 mr-4 text-right">
+                                <h2 class="font-bold text-md text-white">${name}</h2>
+                            </div>
+                            <div class="text-[#C9A84C] font-bold text-lg bg-[#0D1B2E] px-4 py-1 rounded-lg border border-[#2A3F58]">
+                                ${score}
+                            </div>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', cardHTML);
+                });
+            })
+            .catch((error) => {
+                container.innerHTML = `<div class="text-red-500 text-center mt-10">خطأ في التحميل: ${error.message}</div>`;
+            });
+        }
+
+        // تشغيل الدالة فوراً
+        loadLeaderboard();
+    </script>
+</body>
+</html>
