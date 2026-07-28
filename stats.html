@@ -100,6 +100,7 @@
                     // تأكد أن أسماء المتغيرات تطابق ما تحفظه في برنامج الأندرويد
                     document.getElementById('total-quizzes').innerText = studentData.completedQuizzes || 0;
                     document.getElementById('correct-answers').innerText = studentData.totalCorrectAnswers || 0;
+                    document.getElementById('total-score').innerText = studentData.totalScore || 0;
                     
                     let avg = studentData.averageScore || 0;
                     document.getElementById('avg-score').innerText = avg + '%';
