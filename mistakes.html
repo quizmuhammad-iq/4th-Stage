@@ -5,23 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>أرشيف الأخطاء - المرحلة الرابعة</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <style>
-        body {
-            background-color: #0D1B2E;
-            color: white;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
+        body { background-color: #0D1B2E; color: white; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         .card { background-color: #152238; border: 1px solid #2A3F58; }
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen" oncontextmenu="return false;">
+
     <!-- جدار الحماية ضد تعطيل الجافا سكريبت -->
     <noscript>
         <style>
@@ -36,7 +27,7 @@
             <div class="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center text-2xl text-white">📝</div>
             <div>
                 <h1 class="text-xl font-bold">أرشيف الأخطاء</h1>
-                <p class="text-xs text-[#8899AA]">راجع أخطائك قبل الامتحان</p>
+                <p class="text-xs text-[#8899AA]">مخزن محلياً في جهازك</p>
             </div>
         </div>
         <div class="flex gap-3">
@@ -47,103 +38,72 @@
 
     <!-- حاوية الأخطاء -->
     <main id="mistakes-container" class="flex-1 p-4 overflow-y-auto pb-10">
-        <div class="text-center mt-10 text-[#8899AA] font-bold">جاري تحميل الأرشيف...</div>
+        <!-- سيتم توليد الأخطاء هنا -->
     </main>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
-            authDomain: "ministquiz.firebaseapp.com",
-            databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
-            projectId: "ministquiz",
-            storageBucket: "ministquiz.firebasestorage.app",
-            messagingSenderId: "97927221272",
-            appId: "1:97927221272:web:412147e2da692cb946f36d",
-            measurementId: "G-7ZH4XECTE5"
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        
-        const auth = firebase.auth();
-        const db = firebase.database();
-        let currentUserUid = null;
-
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                currentUserUid = user.uid;
-                loadMistakes();
-            } else {
-                window.location.href = "index.html";
-            }
-        });
-
         function loadMistakes() {
             const container = document.getElementById('mistakes-container');
+            // قراءة الأخطاء من الذاكرة المحلية حصراً
+            let savedMistakes = JSON.parse(localStorage.getItem('savedMistakes')) || [];
             
-            db.ref('mistakes/' + currentUserUid).once('value').then((snapshot) => {
-                container.innerHTML = '';
-                
-                if (!snapshot.exists()) {
-                    container.innerHTML = `
-                        <div class="card rounded-2xl p-10 flex flex-col items-center justify-center mt-10">
-                            <div class="text-4xl mb-4">🎯</div>
-                            <p class="text-[#556677]">لا توجد أخطاء مسجلة، استمر هكذا!</p>
-                        </div>`;
-                    return;
-                }
+            container.innerHTML = '';
+            
+            if (savedMistakes.length === 0) {
+                container.innerHTML = `
+                    <div class="card rounded-2xl p-10 flex flex-col items-center justify-center mt-10">
+                        <div class="text-4xl mb-4">🎯</div>
+                        <p class="text-[#556677]">لا توجد أخطاء مسجلة، استمر هكذا!</p>
+                    </div>`;
+                return;
+            }
 
-                snapshot.forEach((child) => {
-                    let mistake = child.val();
-                    
-                    const cardHTML = `
-                        <div class="card rounded-2xl p-5 mb-4 shadow-lg border-r-4 border-r-red-500">
-                            <h2 class="font-bold text-md text-white mb-3 text-right">❓ ${mistake.question || 'سؤال غير معروف'}</h2>
-                            
-                            <div class="bg-[#1E3350] p-3 rounded-xl mb-2">
-                                <p class="text-xs text-[#8899AA] mb-1">إجابتك الخاطئة:</p>
-                                <p class="text-sm text-red-400 font-bold">❌ ${mistake.studentAnswer || 'لم يتم الإجابة'}</p>
-                            </div>
-                            
-                            <div class="bg-[#1E3350] p-3 rounded-xl border border-green-500/30">
-                                <p class="text-xs text-[#8899AA] mb-1">الجواب الصحيح:</p>
-                                <p class="text-sm text-green-400 font-bold">✅ ${mistake.correctAnswer || 'غير متوفر'}</p>
-                            </div>
-                        </div>`;
-                    container.insertAdjacentHTML('beforeend', cardHTML);
-                });
-            }).catch((error) => {
-                container.innerHTML = `<div class="text-red-500 text-center mt-10">خطأ: ${error.message}</div>`;
+            // عرض الأخطاء بترتيب عكسي (الأحدث أولاً)
+            savedMistakes.reverse().forEach((mistake) => {
+                const cardHTML = `
+                    <div class="card rounded-2xl p-5 mb-4 shadow-lg border-r-4 border-r-red-500">
+                        <h2 class="font-bold text-md text-white mb-3 text-right">❓ ${mistake.question || 'سؤال غير معروف'}</h2>
+                        
+                        <div class="bg-[#1E3350] p-3 rounded-xl mb-2">
+                            <p class="text-xs text-[#8899AA] mb-1">إجابتك الخاطئة:</p>
+                            <p class="text-sm text-red-400 font-bold">❌ ${mistake.studentAnswer || 'لم يتم الإجابة'}</p>
+                        </div>
+                        
+                        <div class="bg-[#1E3350] p-3 rounded-xl border border-green-500/30">
+                            <p class="text-xs text-[#8899AA] mb-1">الجواب الصحيح:</p>
+                            <p class="text-sm text-green-400 font-bold">✅ ${mistake.correctAnswer || 'غير متوفر'}</p>
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', cardHTML);
             });
         }
 
         function clearMistakes() {
             if(confirm("هل أنت متأكد من مسح جميع الأسئلة المحفوظة في الأرشيف؟ (هذا الإجراء لا يمكن التراجع عنه)")){
-                db.ref('mistakes/' + currentUserUid).remove().then(() => {
-                    alert("تم مسح الذاكرة المؤقتة وأرشيف الأخطاء بنجاح.");
-                    loadMistakes();
-                }).catch((error) => {
-                    alert("فشل المسح: " + error.message);
-                });
+                localStorage.removeItem('savedMistakes');
+                alert("تم مسح الأرشيف بنجاح.");
+                loadMistakes();
             }
         }
+
+        window.onload = loadMistakes;
     </script>
     <script>
         // 1. منع الكليك الأيمن واختصارات الكيبورد كلياً
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false; // منع F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; // منع Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; // منع Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 85) return false; // منع Ctrl+U
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; 
+            if(e.ctrlKey && e.keyCode == 85) return false; 
         };
 
         // 2. فخ أدوات المطور (Debugger Trap)
-        // هذا الكود يشتغل كل ثانية، إذا الطالب فتح الـ Console راح يوكف المتصفح لحظياً وتنكشف محاولته
         setInterval(function() {
             let before = new Date().getTime();
-            debugger; // هذا الأمر يوقف المتصفح إذا أدوات المطور مفتوحة
+            debugger; 
             let after = new Date().getTime();
             if (after - before > 100) {
-                // إذا تم اكتشاف فتح أدوات المطور، يتم إغلاق الشاشة
                 document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:3rem; font-weight:bold;'>⛔ محاولة غش مكتشفة! الرجاء إغلاق أدوات المطور.</h1>";
                 window.location.replace("about:blank");
             }
