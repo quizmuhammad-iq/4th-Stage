@@ -171,53 +171,73 @@
             }
         }
         function checkUserStatus(uid) {
-            db.ref('students/' + uid).once('value').then((snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    
-                    if (data.isBanned) {
-                        auth.signOut();
-                        return showError("تم حظر هذا الحساب من قبل الإدارة.");
-                    }
+            // الفحص الأول: نتأكد من جدول الحظر أولاً
+            db.ref('banned_devices/' + uid).once('value').then((banSnap) => {
+                if (banSnap.exists()) {
+                    auth.signOut();
+                    isAuthProcessing = false; // تحرير المتغير المنقذ
+                    // نعرض رسالة الحظر اللي جايتك من الفايربيس
+                    return showError(banSnap.val() || "تم حظر هذا الحساب ولا يمكنك استخدام التطبيق."); 
+                }
 
-                    const now = Date.now();
-                    const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000; 
+                // الفحص الثاني: إذا مو محظور، نفحص جهازه بجدول الطلاب
+                db.ref('students/' + uid).once('value').then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        const now = Date.now();
+                        const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000; 
 
-                    if (!data.deviceId) {
-                        db.ref('students/' + uid).update({ 
-                            deviceId: localDeviceId, 
-                            lastDeviceReset: now 
-                        }).then(() => proceedToApp(data.isPaid));
-                    } else if (data.deviceId !== localDeviceId) {
-                        const lastReset = data.lastDeviceReset || 0;
-                        const timeSinceReset = now - lastReset;
+                        if (!data.deviceId) {
+                            db.ref('students/' + uid).update({ 
+                                deviceId: localDeviceId, 
+                                lastDeviceReset: now 
+                            }).then(() => {
+                                isAuthProcessing = false;
+                                proceedToApp(data.isPaid);
+                            });
+                        } else if (data.deviceId !== localDeviceId) {
+                            const lastReset = data.lastDeviceReset || 0;
+                            const timeSinceReset = now - lastReset;
 
-                        if (timeSinceReset > thirtyDaysInMs) {
-                            const confirmReset = confirm("عذراً، هذا الحساب مربوط بمتصفح آخر أو قمت بمسح بيانات متصفحك.\n\nهل تريد ربط الحساب بهذا المتصفح؟\n(تنبيه: يمكنك القيام بهذا الإجراء مرة واحدة فقط كل 30 يوم).");
-                            
-                            if (confirmReset) {
-                                db.ref('students/' + uid).update({ 
-                                    deviceId: localDeviceId, 
-                                    lastDeviceReset: now 
-                                }).then(() => proceedToApp(data.isPaid));
+                            if (timeSinceReset > thirtyDaysInMs) {
+                                const confirmReset = confirm("عذراً، هذا الحساب مربوط بمتصفح آخر أو قمت بمسح بيانات متصفحك.\n\nهل تريد ربط الحساب بهذا المتصفح؟\n(تنبيه: يمكنك القيام بهذا الإجراء مرة واحدة فقط كل 30 يوم).");
+                                
+                                if (confirmReset) {
+                                    db.ref('students/' + uid).update({ 
+                                        deviceId: localDeviceId, 
+                                        lastDeviceReset: now 
+                                    }).then(() => {
+                                        isAuthProcessing = false;
+                                        proceedToApp(data.isPaid);
+                                    });
+                                } else {
+                                    auth.signOut();
+                                    isAuthProcessing = false;
+                                }
                             } else {
+                                const daysLeft = Math.ceil((thirtyDaysInMs - timeSinceReset) / (1000 * 60 * 60 * 24));
                                 auth.signOut();
+                                isAuthProcessing = false;
+                                return showError(`هذا الحساب مربوط بجهاز آخر. الرجاء الانتظار ${daysLeft} يوم.`);
                             }
                         } else {
-                            const daysLeft = Math.ceil((thirtyDaysInMs - timeSinceReset) / (1000 * 60 * 60 * 24));
-                            auth.signOut();
-                            return showError(`هذا الحساب مربوط بجهاز آخر وتم استنفاد محاولات النقل. الرجاء الانتظار ${daysLeft} يوم.`);
+                            isAuthProcessing = false;
+                            proceedToApp(data.isPaid);
                         }
                     } else {
-                        proceedToApp(data.isPaid);
+                        auth.signOut();
+                        isAuthProcessing = false;
+                        showError("بيانات الحساب غير موجودة في قاعدة البيانات.");
                     }
-                } else {
-                    auth.signOut();
-                    showError("بيانات الحساب غير موجودة في قاعدة البيانات.");
-                }
-            }).catch((error) => showError(error.message));
+                }).catch((error) => {
+                    isAuthProcessing = false;
+                    showError(error.message);
+                });
+            }).catch((error) => {
+                isAuthProcessing = false;
+                showError(error.message);
+            });
         }
-
         function proceedToApp(isPaid) {
             localStorage.setItem('isPaid', isPaid === true ? 'true' : 'false');
             window.location.href = isPaid ? "main.html" : "payment.html";
