@@ -115,9 +115,42 @@
 
         let currentTerm = 1;
 
-        auth.onAuthStateChanged((user) => {
-            if (!user) window.location.href = "index.html";
-            else switchTerm(1);
+       auth.onAuthStateChanged((user) => {
+            if (user) {
+                // مستمع لحظي يراقب حالة الطالب بقاعدة البيانات طول ما هو فاتح الموقع
+                db.ref('students/' + user.uid).on('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        
+                        // 1. إذا تم حظره من الأدمن
+                        if (data.isBanned === true) {
+                            auth.signOut().then(() => {
+                                alert("تم حظر حسابك من قبل الإدارة.");
+                                window.location.href = "index.html";
+                            });
+                        }
+                        
+                        // 2. إذا تم تصفير جهازه من الأدمن (مسح حقل deviceId)
+                        if (!data.deviceId) {
+                            auth.signOut().then(() => {
+                                alert("تم تصفير جهازك، يرجى تسجيل الدخول من جديد لإعادة الربط.");
+                                window.location.href = "index.html";
+                            });
+                        }
+                    } else {
+                        // 3. إذا تم حذف حسابه نهائياً من قاعدة البيانات
+                        auth.signOut().then(() => {
+                            alert("تم حذف حسابك.");
+                            window.location.href = "index.html";
+                        });
+                    }
+                });
+                
+                // تشغيل واجهة الكورسات
+                switchTerm(1);
+            } else {
+                window.location.href = "index.html";
+            }
         });
 
         function switchTerm(termNum) {
