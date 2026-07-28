@@ -163,28 +163,53 @@
             banner.innerText = "جاري الرفع وحفظ الأخطاء...";
             banner.style.backgroundColor = "#4CAF50"; 
 
+            // سحب ID الكوز الحالي حتى نعرف الطالب ممتحنه قبل لو لا
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizId = urlParams.get('id');
+
             db.ref('students/' + uid).once('value').then((snapshot) => {
                 let data = snapshot.val() || {};
+                
+                // 1. نظام منع تكرار النقاط (تخزين أعلى درجة لكل كوز)
+                let quizScores = data.quizScores || {};
+                let previousBest = quizScores[quizId] || 0;
+                let pointsToAdd = 0;
+                let isFirstTime = !(quizId in quizScores);
+
+                // إذا إجابته الحالية أحسن من القديمة، ننطيه بس النقاط الإضافية
+                if (correctCount > previousBest) {
+                    pointsToAdd = correctCount - previousBest;
+                    quizScores[quizId] = correctCount; // تحديث بأعلى درجة
+                }
+
+                // 2. تحديث الإحصائيات العامة
                 let oldQuizzes = data.completedQuizzes || 0;
                 let oldCorrect = data.totalCorrectAnswers || 0;
+                let oldTotalScore = data.totalScore || 0;
                 let oldAvg = data.averageScore || 0;
 
-                let newQuizzes = oldQuizzes + 1;
-                let newCorrect = oldCorrect + correctCount;
-                let newAvg = Math.round(((oldAvg * oldQuizzes) + score) / newQuizzes);
+                // عدد الكوزات المنجزة والمعدل التراكمي يتحدث بس بأول محاولة للكوز
+                let newQuizzes = isFirstTime ? oldQuizzes + 1 : oldQuizzes;
+                let newAvg = isFirstTime ? Math.round(((oldAvg * oldQuizzes) + score) / newQuizzes) : oldAvg;
+                
+                // النقاط التراكمية تزيد بس إذا جاب درجة أعلى
+                let newCorrect = oldCorrect + pointsToAdd;
+                let newTotalScore = oldTotalScore + pointsToAdd;
 
                 let updates = {};
-                updates['students/' + uid + '/completedQuizzes'] = newQuizzes;
+                // نرفع الإحصائيات الجديدة
+                if (isFirstTime) updates['students/' + uid + '/completedQuizzes'] = newQuizzes;
+                if (isFirstTime) updates['students/' + uid + '/averageScore'] = newAvg;
+                
                 updates['students/' + uid + '/totalCorrectAnswers'] = newCorrect;
-                updates['students/' + uid + '/averageScore'] = newAvg;
-
-                let oldTotalScore = data.totalScore || 0;
-                let newTotalScore = oldTotalScore + score;
                 updates['students/' + uid + '/totalScore'] = newTotalScore;
+                updates['students/' + uid + '/quizScores'] = quizScores; // حفظ سجل أعلى الدرجات
+                
+                // 3. تحديث لوحة الصدارة بالنقاط الحقيقية المحمية
                 updates['public_leaderboard/' + uid + '/score'] = newTotalScore;
                 updates['public_leaderboard/' + uid + '/name'] = data.name || "طالب المرحلة الرابعة";
 
-                // حفظ الأخطاء محلياً
+                // حفظ الأخطاء محلياً بذاكرة المتصفح
                 if (mistakes && mistakes.length > 0) {
                     let localMistakes = JSON.parse(localStorage.getItem('savedMistakes')) || [];
                     mistakes.forEach(mistake => {
@@ -198,7 +223,12 @@
                 }
 
                 db.ref().update(updates).then(() => {
-                    alert("✅ تم رفع النتيجة وحفظ الأخطاء محلياً!");
+                    // رسالة ذكية تفهم الطالب شكد حصل نقاط
+                    if (pointsToAdd > 0) {
+                        alert(`✅ تم الرفع! كسبت ${pointsToAdd} نقطة جديدة للصدارة.`);
+                    } else {
+                        alert("✅ تم الرفع! لم تكسب نقاط جديدة لأن درجتك السابقة أعلى أو مساوية.");
+                    }
                     window.location.href = "main.html";
                 }).catch((error) => {
                     alert("❌ فشل الرفع: " + error.message);
