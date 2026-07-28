@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>تطبيق المرحلة الرابعة</title>
-    <!-- أيقونة التطبيق للايفون -->
-<link rel="apple-touch-icon" href="icon.png">
-<!-- تفعيل وضع الشاشة الكاملة (إخفاء شريط المتصفح) -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<!-- تغيير لون شريط الإشعارات العلوي ليناسب تصميمك -->
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- اسم التطبيق اللي يظهر تحت الأيقونة -->
-<meta name="apple-mobile-web-app-title" content="كوزات المرحلة الرابعة">
+    
+    <!-- إعدادات تطبيق الويب (PWA) للأندرويد -->
+    <link rel="manifest" href="manifest.json">
+    <!-- إعدادات تطبيق الويب للايفون (iOS) -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="كوزات الرابعة">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -29,16 +30,10 @@
         }
         .card { background-color: #152238; border: 1px solid #2A3F58; }
         .num-badge { background-color: #1E3350; border: 1px solid #C9A84C; color: #C9A84C; }
-        
-        /* تصميم أزرار الكورسات */
         .term-active { background-color: #1E3350; border: 1px solid #C9A84C; color: #C9A84C; }
         .term-inactive { background-color: transparent; color: #556677; }
-        
-        /* تصميم التبويبات (المواد) */
         .tab-active { border-bottom: 2px solid #C9A84C; color: #C9A84C; }
         .tab-inactive { color: #8899AA; }
-
-        /* إخفاء شريط التمرير */
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -61,12 +56,12 @@
             </div>
         </div>
         <div class="flex gap-4 items-center">
-    <button onclick="showAbout()" class="text-sm font-bold text-[#C9A84C] bg-[#1E3350] px-3 py-1 rounded-lg border border-[#C9A84C]">حول</button>
-    <button onclick="window.location.href='mistakes.html'" class="text-2xl cursor-pointer ml-1">📝</button>
-    <button onclick="window.location.href='stats.html'" class="text-2xl cursor-pointer ml-1">📊</button>
-    <button onclick="window.location.href='leaderboard.html'" class="text-2xl cursor-pointer ml-1">🏆</button>
-    <div class="text-2xl cursor-pointer" onclick="logout()">🚪</div>
-</div>
+            <button onclick="showAbout()" class="text-sm font-bold text-[#C9A84C] bg-[#1E3350] px-3 py-1 rounded-lg border border-[#C9A84C]">حول</button>
+            <button onclick="window.location.href='mistakes.html'" class="text-2xl cursor-pointer ml-1">📝</button>
+            <button onclick="window.location.href='stats.html'" class="text-2xl cursor-pointer ml-1">📊</button>
+            <button onclick="window.location.href='leaderboard.html'" class="text-2xl cursor-pointer ml-1">🏆</button>
+            <div class="text-2xl cursor-pointer" onclick="logout()">🚪</div>
+        </div>
     </header>
 
     <!-- أزرار تبديل الكورسات -->
@@ -80,29 +75,27 @@
         <!-- يتم توليد المواد برمجياً هنا -->
     </div>
 
-    <!-- حاوية المحتوى (الكوزات أو حول التطبيق) -->
+    <!-- حاوية المحتوى -->
     <main id="main-content" class="flex-1 p-4 overflow-y-auto pb-20">
         <div class="text-center mt-10 text-[#8899AA]">جاري تحميل البيانات...</div>
     </main>
 
     <script>
-        // ⚠️ استبدل هذه المفاتيح بمفاتيح مشروعك الحقيقية
         const firebaseConfig = {
-  apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
-  authDomain: "ministquiz.firebaseapp.com",
-  databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
-  projectId: "ministquiz",
-  storageBucket: "ministquiz.firebasestorage.app",
-  messagingSenderId: "97927221272",
-  appId: "1:97927221272:web:412147e2da692cb946f36d",
-  measurementId: "G-7ZH4XECTE5"
-};
+            apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
+            authDomain: "ministquiz.firebaseapp.com",
+            databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
+            projectId: "ministquiz",
+            storageBucket: "ministquiz.firebasestorage.app",
+            messagingSenderId: "97927221272",
+            appId: "1:97927221272:web:412147e2da692cb946f36d",
+            measurementId: "G-7ZH4XECTE5"
+        };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // بيانات الكورسات والمواد مطابقة للأندرويد
         const termsData = {
             1: [
                 { id: 'c1_ranin', name: 'رنين', icon: '🧲', color: 'bg-blue-500' },
@@ -122,22 +115,17 @@
 
         let currentTerm = 1;
 
-       auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged((user) => {
             if (user) {
-                // مستمع لحظي يراقب حالة الطالب بقاعدة البيانات طول ما هو فاتح الموقع
                 db.ref('students/' + user.uid).on('value', (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-                        
-                        // 1. إذا تم حظره من الأدمن
                         if (data.isBanned === true) {
                             auth.signOut().then(() => {
                                 alert("تم حظر حسابك من قبل الإدارة.");
                                 window.location.href = "index.html";
                             });
                         }
-                        
-                        // 2. إذا تم تصفير جهازه من الأدمن (مسح حقل deviceId)
                         if (!data.deviceId) {
                             auth.signOut().then(() => {
                                 alert("تم تصفير جهازك، يرجى تسجيل الدخول من جديد لإعادة الربط.");
@@ -145,15 +133,12 @@
                             });
                         }
                     } else {
-                        // 3. إذا تم حذف حسابه نهائياً من قاعدة البيانات
                         auth.signOut().then(() => {
                             alert("تم حذف حسابك.");
                             window.location.href = "index.html";
                         });
                     }
                 });
-                
-                // تشغيل واجهة الكورسات
                 switchTerm(1);
             } else {
                 window.location.href = "index.html";
@@ -162,22 +147,16 @@
 
         function switchTerm(termNum) {
             currentTerm = termNum;
-            
-            // تحديث ألوان أزرار الكورسات
             document.getElementById('btn-term-1').className = `flex-1 py-2 font-bold rounded-xl mr-2 transition-all ${termNum === 1 ? 'term-active' : 'term-inactive'}`;
             document.getElementById('btn-term-2').className = `flex-1 py-2 font-bold rounded-xl transition-all ${termNum === 2 ? 'term-active' : 'term-inactive'}`;
-
-            // إظهار شريط الأزرار في حال كان مخفي (بسبب زر حول)
             document.getElementById('term-toggle-container').style.display = 'flex';
             document.getElementById('tabs-container').style.display = 'flex';
-
             renderTabs();
         }
 
         function renderTabs() {
             const tabsContainer = document.getElementById('tabs-container');
             tabsContainer.innerHTML = '';
-            
             termsData[currentTerm].forEach((subject, index) => {
                 const btn = document.createElement('button');
                 btn.innerText = subject.name;
@@ -185,25 +164,19 @@
                 btn.onclick = () => selectTab(index, btn);
                 tabsContainer.appendChild(btn);
             });
-
-            // تفعيل المادة الأولى تلقائياً عند تغيير الكورس
             selectTab(0, tabsContainer.firstChild);
         }
 
         function selectTab(index, btnElement) {
-            // تحديث ستايل التبويبات
             const allTabs = document.getElementById('tabs-container').children;
             for(let tab of allTabs) tab.className = 'px-4 py-2 font-bold mx-1 tab-inactive';
             btnElement.className = 'px-4 py-2 font-bold mx-1 tab-active';
 
             const subject = termsData[currentTerm][index];
-            
-            // تحديث الهيدر
             document.getElementById('header-title').innerText = subject.name;
             const iconDiv = document.getElementById('header-icon');
             iconDiv.innerText = subject.icon;
             iconDiv.className = `w-12 h-12 rounded-2xl flex items-center justify-center text-2xl ${subject.color}`;
-
             loadQuizzes(subject.id);
         }
 
@@ -233,11 +206,10 @@
 
                 quizzes.reverse().forEach((quiz, index) => {
                     const title = quiz.quizDisplayTitle || quiz.title || quiz.fileName.replace('.html', '');
-                    // التعديل هنا: غيرنا isFree إلى free حتى تطابق الفايربيس مالتك
-const freeTag = quiz.free ? '<span class="text-xs text-green-400"> | 🆓 مجاني</span>' : '';
+                    const freeTag = quiz.free ? '<span class="text-xs text-green-400"> | 🆓 مجاني</span>' : '';
                     
-const cardHTML = `
-    <div onclick="openQuiz('${quiz.id}', ${quiz.free || false})" class="card rounded-2xl p-4 mb-3 flex items-center cursor-pointer active:scale-95 transition-transform">
+                    const cardHTML = `
+                        <div onclick="openQuiz('${quiz.id}', ${quiz.free || false})" class="card rounded-2xl p-4 mb-3 flex items-center cursor-pointer active:scale-95 transition-transform">
                             <div class="num-badge w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm">${index + 1}</div>
                             <div class="flex-1 mr-4 text-right">
                                 <h2 class="font-bold text-lg">${title}</h2>
@@ -251,11 +223,8 @@ const cardHTML = `
         }
 
         function showAbout() {
-            // إخفاء التبويبات والكورسات
             document.getElementById('term-toggle-container').style.display = 'none';
             document.getElementById('tabs-container').style.display = 'none';
-            
-            // تحديث الهيدر
             document.getElementById('header-title').innerText = "حول التطبيق";
             document.getElementById('quiz-count').innerText = "الإصدار 6.0";
             const iconDiv = document.getElementById('header-icon');
@@ -278,12 +247,11 @@ const cardHTML = `
             `;
         }
 
-       function openQuiz(quizId, isFree) {
+        function openQuiz(quizId, isFree) {
             const isPaid = localStorage.getItem('isPaid') === 'true';
             if (isFree || isPaid) {
                 window.location.href = `quiz.html?id=${quizId}`;
             } else {
-                // التعديل: تحويل الطالب لواجهة الدفع بدل التنبيه المزعج
                 window.location.href = "payment.html";
             }
         }
@@ -295,28 +263,38 @@ const cardHTML = `
             });
         }
     </script>
+
     <script>
         // 1. منع الكليك الأيمن واختصارات الكيبورد كلياً
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false; // منع F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; // منع Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; // منع Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 85) return false; // منع Ctrl+U
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; 
+            if(e.ctrlKey && e.keyCode == 85) return false; 
         };
 
         // 2. فخ أدوات المطور (Debugger Trap)
-        // هذا الكود يشتغل كل ثانية، إذا الطالب فتح الـ Console راح يوكف المتصفح لحظياً وتنكشف محاولته
         setInterval(function() {
             let before = new Date().getTime();
-            debugger; // هذا الأمر يوقف المتصفح إذا أدوات المطور مفتوحة
+            debugger; 
             let after = new Date().getTime();
             if (after - before > 100) {
-                // إذا تم اكتشاف فتح أدوات المطور، يتم إغلاق الشاشة
                 document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:3rem; font-weight:bold;'>⛔ محاولة غش مكتشفة! الرجاء إغلاق أدوات المطور.</h1>";
                 window.location.replace("about:blank");
             }
         }, 1000);
+    </script>
+    
+    <script>
+        // تسجيل الـ Service Worker لتفعيل التثبيت PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch((error) => {
+                    console.log('فشل تسجيل PWA:', error);
+                });
+            });
+        }
     </script>
 </body>
 </html>
