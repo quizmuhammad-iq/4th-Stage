@@ -93,25 +93,39 @@
         });
 
         function loadQuizData(id) {
-            db.ref('quizzes/' + id).once('value').then((snapshot) => {
-                if (snapshot.exists()) {
-                    let quiz = snapshot.val();
-                    document.title = quiz.title || 'اختبار';
-                    
-                    // تشغيل الكوز بداخل النافذة
-                    document.getElementById('quiz-frame').src = quiz.fileUrl;
-                    
-                    // إذا اكو وقت، شغل العداد
-                    if (quiz.duration && quiz.duration > 0) {
-                        startTimer(quiz.duration);
+            const uid = auth.currentUser.uid;
+
+            // 1. نسحب بيانات الطالب أولاً حتى نتأكد هو دافع لو لا
+            db.ref('students/' + uid).once('value').then((studentSnap) => {
+                const studentData = studentSnap.val() || {};
+                const isPaid = studentData.isPaid === true;
+
+                // 2. هسه نسحب الكوز المطلوب
+                db.ref('quizzes/' + id).once('value').then((quizSnap) => {
+                    if (quizSnap.exists()) {
+                        let quiz = quizSnap.val();
+                        
+                        // الفحص الجذري: إذا الكوز بفلوس، والطالب ما دافع، اطرده فوراً!
+                        if (!quiz.free && !isPaid) {
+                            alert("⛔ محتوى مقفول! لا يمكنك الوصول لهذا الاختبار عبر الرابط المباشر.");
+                            window.location.href = "payment.html";
+                            return; // توقف لا تكمل تحميل الكوز
+                        }
+
+                        // إذا نجح الفحص، شغل الكوز
+                        document.title = quiz.title || 'اختبار';
+                        document.getElementById('quiz-frame').src = quiz.fileUrl;
+                        
+                        if (quiz.duration && quiz.duration > 0) {
+                            startTimer(quiz.duration);
+                        }
+                    } else {
+                        alert("هذا الاختبار غير موجود أو تم حذفه.");
+                        window.location.href = "main.html";
                     }
-                } else {
-                    alert("هذا الاختبار غير موجود أو تم حذفه.");
-                    window.location.href = "main.html";
-                }
+                });
             });
         }
-
         function startTimer(minutes) {
             const banner = document.getElementById('timer-banner');
             banner.classList.remove('hidden');
