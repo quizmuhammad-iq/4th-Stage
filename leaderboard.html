@@ -138,19 +138,35 @@
         const auth = firebase.auth();
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // المستمع اللحظي
-                db.ref('students/' + user.uid).on('value', (snapshot) => {
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        if (data.isBanned === true || !data.deviceId) {
-                            auth.signOut().then(() => window.location.href = "index.html");
-                        }
-                    } else {
-                        auth.signOut().then(() => window.location.href = "index.html");
+                // مستمع الحظر
+                db.ref('banned_devices/' + user.uid).on('value', (banSnap) => {
+                    if (banSnap.exists()) {
+                        auth.signOut().then(() => {
+                            alert(banSnap.val() || "تم حظر حسابك من قبل الإدارة.");
+                            window.location.href = "index.html";
+                        });
                     }
                 });
 
-                // هذا الكود الخاص بتشغيل لوحة الصدارة
+                // مستمع التصفير والحذف
+                db.ref('students/' + user.uid).on('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        if (!data.deviceId) {
+                            auth.signOut().then(() => {
+                                alert("تم تصفير جهازك، يرجى تسجيل الدخول لإعادة الربط.");
+                                window.location.href = "index.html";
+                            });
+                        }
+                    } else {
+                        auth.signOut().then(() => {
+                            alert("تم حذف حسابك.");
+                            window.location.href = "index.html";
+                        });
+                    }
+                });
+
+                // تشغيل لوحة الصدارة (وظيفة الصفحة)
                 loadLeaderboard();
             } else {
                 window.location.href = "index.html";
