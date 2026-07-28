@@ -75,6 +75,7 @@
         const db = firebase.database();
 
         let isSignUp = false;
+        let isAuthProcessing = false; // 👈 المتغير المنقذ
 
         let localDeviceId = localStorage.getItem('web_device_id');
         if (!localDeviceId) {
@@ -82,8 +83,9 @@
             localStorage.setItem('web_device_id', localDeviceId);
         }
 
+        // الفحص التلقائي يشتغل فقط إذا الطالب مو جاي يسجل يدوياً بلحظتها
         auth.onAuthStateChanged((user) => {
-            if (user) {
+            if (user && !isAuthProcessing) {
                 checkUserStatus(user.uid);
             }
         });
@@ -131,11 +133,14 @@
 
             document.getElementById('btn-submit').innerText = "جاري التحميل...";
             document.getElementById('btn-submit').disabled = true;
+            
+            isAuthProcessing = true; // 👈 نوقف الفحص التلقائي
 
             if (isSignUp) {
                 auth.createUserWithEmailAndPassword(email, pass).then((cred) => {
                     const uid = cred.user.uid;
                     const now = Date.now();
+                    // ننتظر الرفع يكمل يلا نفحص
                     db.ref('students/' + uid).set({
                         name: name,
                         university: uni, 
@@ -147,14 +152,24 @@
                         totalCorrectAnswers: 0,
                         averageScore: 0,
                         totalScore: 0
-                    }).then(() => checkUserStatus(uid));
-                }).catch((error) => showError(translateError(error.code)));
+                    }).then(() => {
+                        isAuthProcessing = false; // نرجع نشغل الفحص
+                        checkUserStatus(uid);
+                    });
+                }).catch((error) => {
+                    isAuthProcessing = false; // نرجع نشغله بحالة الخطأ
+                    showError(translateError(error.code));
+                });
             } else {
-                auth.signInWithEmailAndPassword(email, pass)
-                .catch((error) => showError(translateError(error.code)));
+                auth.signInWithEmailAndPassword(email, pass).then((cred) => {
+                    isAuthProcessing = false; // نرجع نشغل الفحص
+                    checkUserStatus(cred.user.uid);
+                }).catch((error) => {
+                    isAuthProcessing = false;
+                    showError(translateError(error.code));
+                });
             }
         }
-
         function checkUserStatus(uid) {
             db.ref('students/' + uid).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
