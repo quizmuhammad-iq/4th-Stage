@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>تسجيل الدخول - المرحلة الرابعة</title>
+    
+    <!-- إعدادات تطبيق الويب (PWA) للأندرويد -->
+    <link rel="manifest" href="manifest.json">
+    <!-- إعدادات تطبيق الويب للايفون (iOS) -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="كوزات الرابعة">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -129,7 +138,7 @@
                     const now = Date.now();
                     db.ref('students/' + uid).set({
                         name: name,
-                        university: uni, // الحقل الجديد للجامعة
+                        university: uni, 
                         email: email,
                         isPaid: false,
                         deviceId: localDeviceId, 
@@ -207,28 +216,38 @@
             return code;
         }
     </script>
+
     <script>
         // 1. منع الكليك الأيمن واختصارات الكيبورد كلياً
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false; // منع F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; // منع Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; // منع Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 85) return false; // منع Ctrl+U
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; 
+            if(e.ctrlKey && e.keyCode == 85) return false; 
         };
 
         // 2. فخ أدوات المطور (Debugger Trap)
-        // هذا الكود يشتغل كل ثانية، إذا الطالب فتح الـ Console راح يوكف المتصفح لحظياً وتنكشف محاولته
         setInterval(function() {
             let before = new Date().getTime();
-            debugger; // هذا الأمر يوقف المتصفح إذا أدوات المطور مفتوحة
+            debugger; 
             let after = new Date().getTime();
             if (after - before > 100) {
-                // إذا تم اكتشاف فتح أدوات المطور، يتم إغلاق الشاشة
                 document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:3rem; font-weight:bold;'>⛔ محاولة غش مكتشفة! الرجاء إغلاق أدوات المطور.</h1>";
                 window.location.replace("about:blank");
             }
         }, 1000);
+    </script>
+    
+    <script>
+        // تسجيل الـ Service Worker لتفعيل التثبيت PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch((error) => {
+                    console.log('فشل تسجيل PWA:', error);
+                });
+            });
+        }
     </script>
 </body>
 </html>
