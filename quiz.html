@@ -14,8 +14,7 @@
             margin: 0;
             padding: 0;
             background-color: #0D1B2E;
-            overflow: hidden; /* منع التمرير الخارجي */
-            /* أكواد منع النسخ */
+            overflow: hidden; 
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -35,7 +34,7 @@
         }
         iframe {
             width: 100%;
-            height: calc(100vh - 52px); /* ملء الشاشة عدا مساحة المؤقت */
+            height: calc(100vh - 52px); 
             border: none;
             background-color: white;
         }
@@ -43,21 +42,29 @@
 </head>
 <body oncontextmenu="return false;">
 
+    <!-- جدار الحماية ضد تعطيل الجافا سكريبت -->
+    <noscript>
+        <style>
+            body { display: none !important; }
+        </style>
+        <meta http-equiv="refresh" content="0; url=about:blank">
+    </noscript>
+
     <div id="timer-banner" class="hidden">جاري تحميل الوقت...</div>
     <iframe id="quiz-frame" src=""></iframe>
 
     <script>
-        // ⚠️ ضع مفاتيح الفايربيس الخاصة بك هنا
+        // ⚠️ مفاتيح الفايربيس
         const firebaseConfig = {
-  apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
-  authDomain: "ministquiz.firebaseapp.com",
-  databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
-  projectId: "ministquiz",
-  storageBucket: "ministquiz.firebasestorage.app",
-  messagingSenderId: "97927221272",
-  appId: "1:97927221272:web:412147e2da692cb946f36d",
-  measurementId: "G-7ZH4XECTE5"
-};
+            apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
+            authDomain: "ministquiz.firebaseapp.com",
+            databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
+            projectId: "ministquiz",
+            storageBucket: "ministquiz.firebasestorage.app",
+            messagingSenderId: "97927221272",
+            appId: "1:97927221272:web:412147e2da692cb946f36d",
+            measurementId: "G-7ZH4XECTE5"
+        };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         
         const auth = firebase.auth();
@@ -66,18 +73,6 @@
         let timerInterval;
         let scoreSubmitted = false;
 
-        // منع اختصارات الكيبورد مالت النسخ والفحص
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F12' || 
-               (e.ctrlKey && e.shiftKey && e.key === 'I') || 
-               (e.ctrlKey && e.key === 'U') || 
-               (e.ctrlKey && e.key === 'C') ||
-               (e.ctrlKey && e.key === 'P')) {
-                e.preventDefault();
-            }
-        });
-
-        // سحب ID الكوز من الرابط
         const urlParams = new URLSearchParams(window.location.search);
         const quizId = urlParams.get('id');
 
@@ -95,24 +90,20 @@
         function loadQuizData(id) {
             const uid = auth.currentUser.uid;
 
-            // 1. نسحب بيانات الطالب أولاً حتى نتأكد هو دافع لو لا
             db.ref('students/' + uid).once('value').then((studentSnap) => {
                 const studentData = studentSnap.val() || {};
                 const isPaid = studentData.isPaid === true;
 
-                // 2. هسه نسحب الكوز المطلوب
                 db.ref('quizzes/' + id).once('value').then((quizSnap) => {
                     if (quizSnap.exists()) {
                         let quiz = quizSnap.val();
                         
-                        // الفحص الجذري: إذا الكوز بفلوس، والطالب ما دافع، اطرده فوراً!
                         if (!quiz.free && !isPaid) {
                             alert("⛔ محتوى مقفول! لا يمكنك الوصول لهذا الاختبار عبر الرابط المباشر.");
                             window.location.href = "payment.html";
-                            return; // توقف لا تكمل تحميل الكوز
+                            return; 
                         }
 
-                        // إذا نجح الفحص، شغل الكوز
                         document.title = quiz.title || 'اختبار';
                         document.getElementById('quiz-frame').src = quiz.fileUrl;
                         
@@ -126,10 +117,11 @@
                 });
             });
         }
+
         function startTimer(minutes) {
             const banner = document.getElementById('timer-banner');
             banner.classList.remove('hidden');
-            let timeRemaining = minutes * 60; // تحويل للدقائق
+            let timeRemaining = minutes * 60; 
 
             timerInterval = setInterval(() => {
                 if (timeRemaining <= 0) {
@@ -139,7 +131,6 @@
                 } else {
                     let m = Math.floor(timeRemaining / 60);
                     let s = timeRemaining % 60;
-                    // تنسيق الوقت مثل الأندرويد 00:00
                     banner.innerText = `الوقت المتبقي: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
                     timeRemaining--;
                 }
@@ -149,33 +140,29 @@
         function forceSubmit() {
             if (scoreSubmitted) return;
             scoreSubmitted = true;
-            
-            // بما أن الويب يمنع التحكم المباشر بملف iframe من نطاق ثاني لأسباب أمنية
-            // يتم تنبيه الطالب وسحب الدفتر برمجياً عن طريق التوجيه
             alert("انتهى الوقت! تم سحب الدفتر وإغلاق الاختبار.");
             window.location.href = "main.html";
         }
-		// الاستماع للنتيجة القادمة من نافذة الكوز (iframe)
+
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'QUIZ_FINISHED') {
-                const score = event.data.score; // النسبة المئوية
-                const correctCount = event.data.correctAnswers || 0; // عدد الصح
+                const score = event.data.score; 
+                const correctCount = event.data.correctAnswers || 0; 
+                const mistakes = event.data.mistakes || []; 
                 
-                // إيقاف العداد إذا كان شغال
                 if(timerInterval) clearInterval(timerInterval);
                 
-                saveResultToFirebase(score, correctCount);
+                saveResultToFirebase(score, correctCount, mistakes);
             }
         });
 
-        function saveResultToFirebase(score, correctCount) {
+        function saveResultToFirebase(score, correctCount, mistakes) {
             const uid = auth.currentUser.uid;
             const banner = document.getElementById('timer-banner');
             banner.classList.remove('hidden');
-            banner.innerText = "جاري رفع النتيجة للفايربيس...";
-            banner.style.backgroundColor = "#4CAF50"; // أخضر
+            banner.innerText = "جاري الرفع وحفظ الأخطاء...";
+            banner.style.backgroundColor = "#4CAF50"; 
 
-            // 1. تحديث إحصائيات الطالب (نفس المتغيرات اللي قرأناها بـ stats.html)
             db.ref('students/' + uid).once('value').then((snapshot) => {
                 let data = snapshot.val() || {};
                 let oldQuizzes = data.completedQuizzes || 0;
@@ -184,7 +171,6 @@
 
                 let newQuizzes = oldQuizzes + 1;
                 let newCorrect = oldCorrect + correctCount;
-                // حساب المعدل التراكمي الجديد
                 let newAvg = Math.round(((oldAvg * oldQuizzes) + score) / newQuizzes);
 
                 let updates = {};
@@ -192,23 +178,55 @@
                 updates['students/' + uid + '/totalCorrectAnswers'] = newCorrect;
                 updates['students/' + uid + '/averageScore'] = newAvg;
 
-                // 2. تحديث لوحة الصدارة (نضيف الدرجة الجديدة لمجموع درجاته)
                 let oldTotalScore = data.totalScore || 0;
                 let newTotalScore = oldTotalScore + score;
                 updates['students/' + uid + '/totalScore'] = newTotalScore;
-                
                 updates['public_leaderboard/' + uid + '/score'] = newTotalScore;
                 updates['public_leaderboard/' + uid + '/name'] = data.name || "طالب المرحلة الرابعة";
 
-                // رفع كل التحديثات دفعة واحدة
+                // حفظ الأخطاء محلياً
+                if (mistakes && mistakes.length > 0) {
+                    let localMistakes = JSON.parse(localStorage.getItem('savedMistakes')) || [];
+                    mistakes.forEach(mistake => {
+                        localMistakes.push({
+                            question: mistake.question,
+                            studentAnswer: mistake.studentChoice,
+                            correctAnswer: mistake.correctAnswer
+                        });
+                    });
+                    localStorage.setItem('savedMistakes', JSON.stringify(localMistakes));
+                }
+
                 db.ref().update(updates).then(() => {
-                    alert("✅ تم رفع نتيجتك بنجاح: " + score + "%");
+                    alert("✅ تم رفع النتيجة وحفظ الأخطاء محلياً!");
                     window.location.href = "main.html";
                 }).catch((error) => {
                     alert("❌ فشل الرفع: " + error.message);
                 });
             });
         }
+    </script>
+
+    <script>
+        // 1. منع الكليك الأيمن واختصارات الكيبورد كلياً
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; // منع F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; // منع Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; // منع Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 85) return false; // منع Ctrl+U
+        };
+
+        // 2. فخ أدوات المطور (Debugger Trap)
+        setInterval(function() {
+            let before = new Date().getTime();
+            debugger; 
+            let after = new Date().getTime();
+            if (after - before > 100) {
+                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:3rem; font-weight:bold;'>⛔ محاولة غش مكتشفة! الرجاء إغلاق أدوات المطور.</h1>";
+                window.location.replace("about:blank");
+            }
+        }, 1000);
     </script>
 </body>
 </html>
