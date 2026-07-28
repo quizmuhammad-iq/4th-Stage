@@ -4,127 +4,200 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>تسجيل الدخول - المرحلة الرابعة</title>
-    <!-- أيقونة التطبيق للايفون -->
-<link rel="apple-touch-icon" href="icon.png">
-<!-- تفعيل وضع الشاشة الكاملة (إخفاء شريط المتصفح) -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<!-- تغيير لون شريط الإشعارات العلوي ليناسب تصميمك -->
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- اسم التطبيق اللي يظهر تحت الأيقونة -->
-<meta name="apple-mobile-web-app-title" content="كوزات المرحلة الرابعة">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- تضمين مكتبات الفايربيس (الإصدار الثامن للسهولة) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        /* أكواد منع النسخ والتحديد */
-        body {
-            background-color: #0D1B2E;
-            color: white;
-            user-select: none; /* منع تحديد النص */
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            -webkit-touch-callout: none; /* منع القائمة المنبثقة بالايفون */
-        }
-        .input-field {
-            background-color: #152238;
-            border: 1px solid #2A3F58;
-            color: white;
-        }
-        .input-field:focus {
-            outline: none;
-            border-color: #C9A84C;
-        }
+        body { background-color: #0D1B2E; color: white; user-select: none; -webkit-touch-callout: none; }
+        .input-field { background-color: #152238; border: 1px solid #2A3F58; color: white; }
+        .input-field:focus { outline: none; border-color: #C9A84C; }
+        .card { background-color: #1E3350; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6" oncontextmenu="return false;">
 
-    <div class="w-full max-w-md flex flex-col gap-5">
-        <h1 class="text-2xl font-bold text-center mb-6">تسجيل الدخول</h1>
+    <div class="w-full max-w-md flex flex-col gap-4 items-center">
+        <div class="w-24 h-24 bg-[#152238] rounded-3xl flex items-center justify-center border-2 border-[#C9A84C] shadow-lg mb-4">
+            <span class="text-5xl">🎓</span>
+        </div>
+        
+        <h1 id="form-title" class="text-2xl font-bold mb-2">تسجيل الدخول</h1>
+        <p id="error-msg" class="text-red-500 text-sm text-center hidden w-full p-2 bg-red-500/20 rounded-lg"></p>
 
-        <input type="email" id="email" placeholder="البريد الإلكتروني" class="input-field w-full rounded-xl p-4 text-right">
-        <input type="password" id="password" placeholder="كلمة المرور" class="input-field w-full rounded-xl p-4 text-right">
+        <!-- حقول إنشاء الحساب (مخفية بالبداية) -->
+        <input type="text" id="user-name" placeholder="الاسم الثلاثي" class="input-field w-full rounded-xl p-4 hidden">
+        <input type="text" id="user-uni" placeholder="الجامعة أو الكلية (مثال: كلية الإسراء الجامعة)" class="input-field w-full rounded-xl p-4 hidden">
+        
+        <input type="email" id="user-email" placeholder="البريد الإلكتروني" class="input-field w-full rounded-xl p-4 text-left" dir="ltr">
+        <input type="password" id="user-pass" placeholder="كلمة المرور (6 أحرف على الأقل)" class="input-field w-full rounded-xl p-4 text-left" dir="ltr">
 
-        <p id="error-msg" class="text-red-500 text-sm text-center hidden"></p>
-
-        <button id="btnLogin" onclick="login()" class="w-full bg-[#C9A84C] text-[#0D1B2E] font-bold rounded-xl p-4 mt-4">
-            تسجيل الدخول
+        <button id="btn-submit" onclick="handleAuth()" class="w-full bg-[#C9A84C] text-[#0D1B2E] font-bold rounded-xl p-4 mt-2 hover:bg-yellow-500 transition">
+            دخول
         </button>
-        <button id="btnRegister" onclick="register()" class="w-full bg-[#1E3350] text-white font-bold rounded-xl p-4">
-            إنشاء حساب جديد
+
+        <button onclick="toggleMode()" id="btn-toggle" class="text-[#8899AA] text-sm mt-4 hover:text-white transition">
+            ليس لديك حساب؟ أنشئ حساباً جديداً
         </button>
     </div>
 
     <script>
-        // ⚠️ ضع مفاتيح الفايربيس الخاصة بك هنا
         const firebaseConfig = {
-  apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
-  authDomain: "ministquiz.firebaseapp.com",
-  databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
-  projectId: "ministquiz",
-  storageBucket: "ministquiz.firebasestorage.app",
-  messagingSenderId: "97927221272",
-  appId: "1:97927221272:web:412147e2da692cb946f36d",
-  measurementId: "G-7ZH4XECTE5"
-};
-        firebase.initializeApp(firebaseConfig);
+            apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
+            authDomain: "ministquiz.firebaseapp.com",
+            databaseURL: "https://ministquiz-default-rtdb.firebaseio.com",
+            projectId: "ministquiz",
+            storageBucket: "ministquiz.firebasestorage.app",
+            messagingSenderId: "97927221272",
+            appId: "1:97927221272:web:412147e2da692cb946f36d",
+            measurementId: "G-7ZH4XECTE5"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // منع اختصارات الكيبورد (F12, Ctrl+Shift+I, Ctrl+U, Ctrl+C)
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F12' || 
-               (e.ctrlKey && e.shiftKey && e.key === 'I') || 
-               (e.ctrlKey && e.key === 'U') || 
-               (e.ctrlKey && e.key === 'C')) {
-                e.preventDefault();
+        let isSignUp = false;
+
+        let localDeviceId = localStorage.getItem('web_device_id');
+        if (!localDeviceId) {
+            localDeviceId = 'web_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+            localStorage.setItem('web_device_id', localDeviceId);
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                checkUserStatus(user.uid);
             }
         });
 
-        function showError(msg) {
-            const errorP = document.getElementById('error-msg');
-            errorP.innerText = msg;
-            errorP.classList.remove('hidden');
+        function toggleMode() {
+            isSignUp = !isSignUp;
+            document.getElementById('error-msg').classList.add('hidden');
+            const nameInput = document.getElementById('user-name');
+            const uniInput = document.getElementById('user-uni');
+            const title = document.getElementById('form-title');
+            const btnSubmit = document.getElementById('btn-submit');
+            const btnToggle = document.getElementById('btn-toggle');
+
+            if (isSignUp) {
+                nameInput.classList.remove('hidden');
+                uniInput.classList.remove('hidden');
+                title.innerText = "إنشاء حساب جديد";
+                btnSubmit.innerText = "إنشاء الحساب";
+                btnToggle.innerText = "لديك حساب بالفعل؟ سجل دخولك";
+            } else {
+                nameInput.classList.add('hidden');
+                uniInput.classList.add('hidden');
+                title.innerText = "تسجيل الدخول";
+                btnSubmit.innerText = "دخول";
+                btnToggle.innerText = "ليس لديك حساب؟ أنشئ حساباً جديداً";
+            }
         }
 
-        function login() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            if(!email || !pass) return showError("يرجى إدخال الإيميل والباسورد");
-            
-            document.getElementById('btnLogin').innerText = "جاري التحميل...";
-            auth.signInWithEmailAndPassword(email, pass)
-                .then((userCredential) => {
-                    checkUserStatus(userCredential.user.uid);
-                })
-                .catch((error) => {
-                    document.getElementById('btnLogin').innerText = "تسجيل الدخول";
-                    showError("خطأ: " + error.message);
-                });
+        function showError(msg) {
+            const errEl = document.getElementById('error-msg');
+            errEl.innerText = msg;
+            errEl.classList.remove('hidden');
+            document.getElementById('btn-submit').innerText = isSignUp ? "إنشاء الحساب" : "دخول";
+            document.getElementById('btn-submit').disabled = false;
+        }
+
+        function handleAuth() {
+            const email = document.getElementById('user-email').value.trim();
+            const pass = document.getElementById('user-pass').value.trim();
+            const name = document.getElementById('user-name').value.trim();
+            const uni = document.getElementById('user-uni').value.trim();
+
+            if (!email || !pass) return showError("يرجى ملء الحقول المطلوبة.");
+            if (isSignUp && (!name || !uni)) return showError("يرجى كتابة اسمك الثلاثي واسم الجامعة.");
+
+            document.getElementById('btn-submit').innerText = "جاري التحميل...";
+            document.getElementById('btn-submit').disabled = true;
+
+            if (isSignUp) {
+                auth.createUserWithEmailAndPassword(email, pass).then((cred) => {
+                    const uid = cred.user.uid;
+                    const now = Date.now();
+                    db.ref('students/' + uid).set({
+                        name: name,
+                        university: uni, // الحقل الجديد للجامعة
+                        email: email,
+                        isPaid: false,
+                        deviceId: localDeviceId, 
+                        lastDeviceReset: now,
+                        completedQuizzes: 0,
+                        totalCorrectAnswers: 0,
+                        averageScore: 0,
+                        totalScore: 0
+                    }).then(() => checkUserStatus(uid));
+                }).catch((error) => showError(translateError(error.code)));
+            } else {
+                auth.signInWithEmailAndPassword(email, pass)
+                .catch((error) => showError(translateError(error.code)));
+            }
         }
 
         function checkUserStatus(uid) {
             db.ref('students/' + uid).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    if (data.isPaid === true) {
-                        localStorage.setItem('isPaid', 'true');
-                    } else {
-                        localStorage.setItem('isPaid', 'false');
+                    
+                    if (data.isBanned) {
+                        auth.signOut();
+                        return showError("تم حظر هذا الحساب من قبل الإدارة.");
                     }
-                    window.location.href = "main.html"; 
+
+                    const now = Date.now();
+                    const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000; 
+
+                    if (!data.deviceId) {
+                        db.ref('students/' + uid).update({ 
+                            deviceId: localDeviceId, 
+                            lastDeviceReset: now 
+                        }).then(() => proceedToApp(data.isPaid));
+                    } else if (data.deviceId !== localDeviceId) {
+                        const lastReset = data.lastDeviceReset || 0;
+                        const timeSinceReset = now - lastReset;
+
+                        if (timeSinceReset > thirtyDaysInMs) {
+                            const confirmReset = confirm("عذراً، هذا الحساب مربوط بمتصفح آخر أو قمت بمسح بيانات متصفحك.\n\nهل تريد ربط الحساب بهذا المتصفح؟\n(تنبيه: يمكنك القيام بهذا الإجراء مرة واحدة فقط كل 30 يوم).");
+                            
+                            if (confirmReset) {
+                                db.ref('students/' + uid).update({ 
+                                    deviceId: localDeviceId, 
+                                    lastDeviceReset: now 
+                                }).then(() => proceedToApp(data.isPaid));
+                            } else {
+                                auth.signOut();
+                            }
+                        } else {
+                            const daysLeft = Math.ceil((thirtyDaysInMs - timeSinceReset) / (1000 * 60 * 60 * 24));
+                            auth.signOut();
+                            return showError(`هذا الحساب مربوط بجهاز آخر وتم استنفاد محاولات النقل. الرجاء الانتظار ${daysLeft} يوم.`);
+                        }
+                    } else {
+                        proceedToApp(data.isPaid);
+                    }
                 } else {
-                    showError("الحساب غير مسجل في قاعدة البيانات");
+                    auth.signOut();
+                    showError("بيانات الحساب غير موجودة في قاعدة البيانات.");
                 }
-            });
+            }).catch((error) => showError(error.message));
         }
 
-        // دالة التسجيل يمكن إضافتها بنفس المنطق
-        function register() {
-            alert("سيتم توجيهك لصفحة إنشاء الحساب...");
+        function proceedToApp(isPaid) {
+            localStorage.setItem('isPaid', isPaid === true ? 'true' : 'false');
+            window.location.href = isPaid ? "main.html" : "payment.html";
+        }
+
+        function translateError(code) {
+            if (code === 'auth/email-already-in-use') return 'هذا البريد مستخدم مسبقاً.';
+            if (code === 'auth/invalid-email') return 'صيغة البريد الإلكتروني غير صحيحة.';
+            if (code === 'auth/weak-password') return 'كلمة المرور ضعيفة (يجب أن تكون 6 أحرف على الأقل).';
+            if (code === 'auth/user-not-found' || code === 'auth/wrong-password') return 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+            return code;
         }
     </script>
 </body>
