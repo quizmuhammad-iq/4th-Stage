@@ -117,18 +117,23 @@
 
         auth.onAuthStateChanged((user) => {
             if (user) {
+                // مستمع الحظر
+                db.ref('banned_devices/' + user.uid).on('value', (banSnap) => {
+                    if (banSnap.exists()) {
+                        auth.signOut().then(() => {
+                            alert(banSnap.val() || "تم حظر حسابك من قبل الإدارة.");
+                            window.location.href = "index.html";
+                        });
+                    }
+                });
+
+                // مستمع التصفير والحذف
                 db.ref('students/' + user.uid).on('value', (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-                        if (data.isBanned === true) {
-                            auth.signOut().then(() => {
-                                alert("تم حظر حسابك من قبل الإدارة.");
-                                window.location.href = "index.html";
-                            });
-                        }
                         if (!data.deviceId) {
                             auth.signOut().then(() => {
-                                alert("تم تصفير جهازك، يرجى تسجيل الدخول من جديد لإعادة الربط.");
+                                alert("تم تصفير جهازك، يرجى تسجيل الدخول لإعادة الربط.");
                                 window.location.href = "index.html";
                             });
                         }
@@ -139,6 +144,8 @@
                         });
                     }
                 });
+
+                // تشغيل واجهة الكورسات (وظيفة الصفحة)
                 switchTerm(1);
             } else {
                 window.location.href = "index.html";
