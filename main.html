@@ -114,9 +114,11 @@
 
         let currentTerm = 1;
 
+        let currentUserData = null; // متغير عالمي لحفظ بيانات الطالب (الاسم وحالة الدفع)
+
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // مستمع الحظر
+                // 1. مستمع الحظر
                 db.ref('banned_devices/' + user.uid).on('value', (banSnap) => {
                     if (banSnap.exists()) {
                         auth.signOut().then(() => {
@@ -126,11 +128,11 @@
                     }
                 });
 
-                // مستمع التصفير والحذف
+                // 2. مستمع التصفير وسحب بيانات الطالب
                 db.ref('students/' + user.uid).on('value', (snapshot) => {
                     if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        if (!data.deviceId) {
+                        currentUserData = snapshot.val(); // 👈 حفظنا البيانات هنا علمود قسم "حول"
+                        if (!currentUserData.deviceId) {
                             auth.signOut().then(() => {
                                 alert("تم تصفير جهازك، يرجى تسجيل الدخول لإعادة الربط.");
                                 window.location.href = "index.html";
@@ -141,6 +143,20 @@
                             alert("تم حذف حسابك.");
                             window.location.href = "index.html";
                         });
+                    }
+                });
+
+                // 3. مستمع وضع الصيانة (يقفل الموقع فوراً إذا الأدمن فعله)
+                db.ref('app_control/maintenance_mode').on('value', (snap) => {
+                    if (snap.val() === true) {
+                        // مسح محتوى الشاشة وعرض رسالة الصيانة
+                        document.body.innerHTML = `
+                            <div style="display:flex; height:100vh; background-color:#0D1B2E; color:white; align-items:center; justify-content:center; flex-direction:column; padding:20px; text-align:center;">
+                                <span style="font-size:70px; margin-bottom:20px;">🛠</span>
+                                <h1 style="font-size:28px; font-weight:bold; color:#C9A84C;">التطبيق تحت الصيانة</h1>
+                                <p style="color:#8899AA; margin-top:15px; font-size:16px;">نعمل على تحديث المنصة وتحسينها.<br>يرجى العودة لاحقاً.</p>
+                            </div>
+                        `;
                     }
                 });
 
