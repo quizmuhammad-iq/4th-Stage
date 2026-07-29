@@ -186,97 +186,105 @@
             }
         });
 
-        function saveResultToFirebase(score, correctCount, mistakes) {
+        function saveResultToFirebase(scorePercent, correctCount, mistakes) {
             const uid = auth.currentUser.uid;
             const banner = document.getElementById('timer-banner');
             banner.classList.remove('hidden');
             banner.innerText = "جاري الرفع وحفظ الأخطاء...";
             banner.style.backgroundColor = "#4CAF50"; 
 
-            // سحب ID الكوز الحالي حتى نعرف الطالب ممتحنه قبل لو لا
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
+            // حساب العدد الكلي للأسئلة
+            const totalQs = scorePercent > 0 ? Math.round((correctCount * 100) / scorePercent) : (correctCount || 1);
 
-            db.ref('students/' + uid).once('value').then((snapshot) => {
-                let data = snapshot.val() || {};
-                
-                // 1. نظام منع تكرار النقاط (تخزين أعلى درجة لكل كوز)
-                let quizScores = data.quizScores || {};
-                let previousBest = quizScores[quizId] || 0;
-                let pointsToAdd = 0;
-                let isFirstTime = !(quizId in quizScores);
+            // 1. نقرأ نتيجته القديمة لنفس الكوز (إذا موجودة)
+            db.ref('results/' + quizId + '/' + uid).once('value').then((resSnap) => {
+                let oldQuizScore = 0;
+                let oldQuizTotal = 0;
+                let isNewQuiz = true;
 
-                // إذا إجابته الحالية أحسن من القديمة، ننطيه بس النقاط الإضافية
-                if (correctCount > previousBest) {
-                    pointsToAdd = correctCount - previousBest;
-                    quizScores[quizId] = correctCount; // تحديث بأعلى درجة
-                }
+                if (resSnap.exists()) {
+                    isNewQuiz = false;
+                    let pastResult = resSnap.val();
+                    oldQuizScore = pastResult.score || 0;
+                    oldQuizTotal = pastResult.total || 0;
 
-                // 2. تحديث الإحصائيات العامة
-                let oldQuizzes = data.completedQuizzes || 0;
-                let oldCorrect = data.totalCorrectAnswers || 0;
-                let oldTotalScore = data.totalScore || 0;
-                let oldAvg = data.averageScore || 0;
-
-                // عدد الكوزات المنجزة والمعدل التراكمي يتحدث بس بأول محاولة للكوز
-                let newQuizzes = isFirstTime ? oldQuizzes + 1 : oldQuizzes;
-                let newAvg = isFirstTime ? Math.round(((oldAvg * oldQuizzes) + score) / newQuizzes) : oldAvg;
-                
-                // النقاط التراكمية تزيد بس إذا جاب درجة أعلى
-                let newCorrect = oldCorrect + pointsToAdd;
-                let newTotalScore = oldTotalScore + pointsToAdd;
-
-                let updates = {};
-                // نرفع الإحصائيات الجديدة
-                if (isFirstTime) updates['students/' + uid + '/completedQuizzes'] = newQuizzes;
-                if (isFirstTime) updates['students/' + uid + '/averageScore'] = newAvg;
-                
-                updates['students/' + uid + '/totalCorrectAnswers'] = newCorrect;
-                updates['students/' + uid + '/totalScore'] = newTotalScore;
-                updates['students/' + uid + '/quizScores'] = quizScores; // حفظ سجل أعلى الدرجات
-
-                // إضافة النتيجة لسجل الكوز حتى تظهر ببرنامج الأدمن
-                // تم استخدام عملية حسابية لاستخراج عدد الأسئلة الكلي (total) من النسبة المئوية
-                let totalQs = score > 0 ? Math.round((correctCount * 100) / score) : correctCount;
-                
-                updates['results/' + quizId + '/' + uid] = {
-                    studentName: data.name || "طالب مجهول",
-                    uid: uid,
-                    subject: document.title || "اختبار",
-                    quizId: quizId,
-                    score: correctCount, // عدد الصح
-                    total: totalQs, // عدد الأسئلة الكلي
-                    percentage: score, // النسبة المئوية
-                    submittedAt: Date.now() // وقت الإرسال بالملي ثانية
-                };
-                
-                // 3. تحديث لوحة الصدارة بالنقاط الحقيقية المحمية
-                updates['public_leaderboard/' + uid + '/score'] = newTotalScore;
-                updates['public_leaderboard/' + uid + '/name'] = data.name || "طالب المرحلة الرابعة";
-
-                // حفظ الأخطاء محلياً بذاكرة المتصفح
-                if (mistakes && mistakes.length > 0) {
-                    let localMistakes = JSON.parse(localStorage.getItem('savedMistakes')) || [];
-                    mistakes.forEach(mistake => {
-                        localMistakes.push({
-                            question: mistake.question,
-                            studentAnswer: mistake.studentChoice,
-                            correctAnswer: mistake.correctAnswer
-                        });
-                    });
-                    localStorage.setItem('savedMistakes', JSON.stringify(localMistakes));
-                }
-
-                db.ref().update(updates).then(() => {
-                    // رسالة ذكية تفهم الطالب شكد حصل نقاط
-                    if (pointsToAdd > 0) {
-                        alert(`✅ تم الرفع! كسبت ${pointsToAdd} نقطة جديدة للصدارة.`);
-                    } else {
+                    // إذا إجابته الحالية مو أحسن من القديمة، نوقف الرفع ونبلغه
+                    if (correctCount <= oldQuizScore) {
                         alert("✅ تم الرفع! لم تكسب نقاط جديدة لأن درجتك السابقة أعلى أو مساوية.");
+                        window.location.href = "main.html";
+                        return; 
                     }
-                    window.location.href = "main.html";
-                }).catch((error) => {
-                    alert("❌ فشل الرفع: " + error.message);
+                }
+
+                // 2. نقرأ بيانات الطالب والإحصائيات الخاصة بي
+                db.ref('students/' + uid).once('value').then((studentSnap) => {
+                    let data = studentSnap.val() || {};
+                    let stats = data.stats || { totalQuizzes: 0, totalScore: 0, totalQuestions: 0, averagePercent: 0 };
+                    
+                    let qCount = stats.totalQuizzes || 0;
+                    let sScore = stats.totalScore || 0;
+                    let sTotal = stats.totalQuestions || 0;
+
+                    // الحساب التراكمي للإحصائيات
+                    if (isNewQuiz) {
+                        qCount += 1;
+                        sScore += correctCount;
+                        sTotal += totalQs;
+                    } else {
+                        sScore = sScore - oldQuizScore + correctCount;
+                        sTotal = sTotal - oldQuizTotal + totalQs;
+                    }
+
+                    let newAvg = sTotal > 0 ? Math.round((sScore * 100) / sTotal) : 0;
+
+                    let updates = {};
+                    
+                    // تحديث إحصائيات الطالب بنفس مسارات الاندرويد
+                    updates['students/' + uid + '/stats/totalQuizzes'] = qCount;
+                    updates['students/' + uid + '/stats/totalScore'] = sScore;
+                    updates['students/' + uid + '/stats/totalQuestions'] = sTotal;
+                    updates['students/' + uid + '/stats/averagePercent'] = newAvg;
+                    updates['students/' + uid + '/stats/lastSubmitTime'] = Date.now();
+
+                    let resultData = {
+                        studentName: data.name || "طالب مجهول",
+                        uid: uid,
+                        subject: document.title || "اختبار",
+                        quizId: quizId,
+                        score: correctCount,
+                        total: totalQs,
+                        percentage: scorePercent,
+                        submittedAt: Date.now()
+                    };
+                    
+                    updates['results/' + quizId + '/' + uid] = resultData;
+                    
+                    // إضافة الرفع لليدربورد الخاص بالكوز (كان مفقود بالموقع)
+                    updates['leaderboard/' + quizId + '/' + uid] = resultData;
+
+                    // تحديث الليدربورد العام (يعتمد على المعدل مو النقاط مثل الاندرويد)
+                    updates['public_leaderboard/' + uid + '/score'] = newAvg;
+                    updates['public_leaderboard/' + uid + '/name'] = data.name || "طالب مجهول";
+                    updates['public_leaderboard/' + uid + '/lastSubmitTime'] = Date.now();
+
+                    // حفظ الأخطاء محلياً
+                    if (mistakes && mistakes.length > 0) {
+                        let localMistakes = JSON.parse(localStorage.getItem('savedMistakes')) || [];
+                        mistakes.forEach(m => {
+                            localMistakes.push({ question: m.question, studentAnswer: m.studentChoice, correctAnswer: m.correctAnswer });
+                        });
+                        localStorage.setItem('savedMistakes', JSON.stringify(localMistakes));
+                    }
+
+                    db.ref().update(updates).then(() => {
+                        let msg = isNewQuiz ? `✅ تم الرفع! معدلك العام أصبح ${newAvg}%` : `✅ تم كسر رقمك القياسي! معدلك ارتفع إلى ${newAvg}%`;
+                        alert(msg);
+                        window.location.href = "main.html";
+                    }).catch((error) => {
+                        alert("❌ فشل الرفع: " + error.message);
+                    });
                 });
             });
         }
