@@ -120,18 +120,15 @@
             }
         });
         function loadPersonalStats(uid) {
-            // سحب بيانات الطالب من عقدة students
             db.ref('students/' + uid).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     const studentData = snapshot.val();
+                    const stats = studentData.stats || {};
                     
-                    // تأكد أن أسماء المتغيرات تطابق ما تحفظه في برنامج الأندرويد
-                    document.getElementById('total-quizzes').innerText = studentData.completedQuizzes || 0;
-                    document.getElementById('correct-answers').innerText = studentData.totalCorrectAnswers || 0;
-                    document.getElementById('total-score').innerText = studentData.totalScore || 0;
-                    
-                    let avg = studentData.averageScore || 0;
-                    document.getElementById('avg-score').innerText = avg + '%';
+                    document.getElementById('total-quizzes').innerText = stats.totalQuizzes || 0;
+                    document.getElementById('correct-answers').innerText = stats.totalScore || 0;
+                    document.getElementById('total-score').innerText = stats.totalScore || 0;
+                    document.getElementById('avg-score').innerText = (stats.averagePercent || 0) + '%';
                 }
             }).catch((error) => {
                 alert("حدث خطأ في جلب الإحصائيات: " + error.message);
