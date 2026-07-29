@@ -1,7 +1,7 @@
 {
   "name": "كوزات المرحلة الرابعة",
-  "short_name": "كوزاتي",
-  "start_url": "/index.html",
+  "short_name": "المرحلة الرابعة",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0D1B2E",
   "theme_color": "#0D1B2E",
