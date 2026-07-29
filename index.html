@@ -140,21 +140,25 @@
                 auth.createUserWithEmailAndPassword(email, pass).then((cred) => {
                     const uid = cred.user.uid;
                     const now = Date.now();
-                    // ننتظر الرفع يكمل يلا نفحص
                     db.ref('students/' + uid).set({
                         name: name,
                         university: uni, 
                         email: email,
                         isPaid: false,
                         deviceId: localDeviceId, 
+                        platform: "web",
                         lastDeviceReset: now,
-                        registeredAt: now, // 👈 التعديل هنا: نفس الاسم اللي يقراه الأندرويد
-                        completedQuizzes: 0,
-                        totalCorrectAnswers: 0,
-                        averageScore: 0,
-                        totalScore: 0
+                        registeredAt: now,
+                        // توحيد الإحصائيات مع تطبيق الاندرويد
+                        stats: {
+                            totalQuizzes: 0,
+                            totalScore: 0,
+                            totalQuestions: 0,
+                            averagePercent: 0,
+                            lastSubmitTime: now
+                        }
                     }).then(() => {
-                        isAuthProcessing = false; // نرجع نشغل الفحص
+                        isAuthProcessing = false; 
                         checkUserStatus(uid);
                     });
                 }).catch((error) => {
