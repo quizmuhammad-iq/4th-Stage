@@ -1,17 +1,16 @@
-const CACHE_NAME = 'ministquiz-v1';
-// قائمة الملفات اللي نريد نحفظها بالذاكرة
+const CACHE_NAME = 'ministquiz-v1.1';
+// قائمة الملفات اللي نريد نحفظها بالذاكرة (بدون سلاش وبدون ملف الأخطاء الممسوح)
 const urlsToCache = [
-    '/',
-    '/index.html',
-    '/main.html',
-    '/quiz.html',
-    '/payment.html',
-    '/mistakes.html',
-    '/stats.html',
-    '/leaderboard.html',
-    '/manifest.json',
-    '/icon-192.png',
-    '/icon-512.png'
+    './',
+    'index.html',
+    'main.html',
+    'quiz.html',
+    'payment.html',
+    'stats.html',
+    'leaderboard.html',
+    'manifest.json',
+    'icon-192.png',
+    'icon-512.png'
 ];
 
 self.addEventListener('install', event => {
