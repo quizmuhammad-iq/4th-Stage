@@ -94,47 +94,35 @@
             isSignUp = !isSignUp;
             document.getElementById('error-msg').classList.add('hidden');
             const nameInput = document.getElementById('user-name');
-            const uniInput = document.getElementById('user-uni');
             const title = document.getElementById('form-title');
             const btnSubmit = document.getElementById('btn-submit');
             const btnToggle = document.getElementById('btn-toggle');
 
             if (isSignUp) {
                 nameInput.classList.remove('hidden');
-                uniInput.classList.remove('hidden');
                 title.innerText = "إنشاء حساب جديد";
                 btnSubmit.innerText = "إنشاء الحساب";
                 btnToggle.innerText = "لديك حساب بالفعل؟ سجل دخولك";
             } else {
                 nameInput.classList.add('hidden');
-                uniInput.classList.add('hidden');
                 title.innerText = "تسجيل الدخول";
                 btnSubmit.innerText = "دخول";
                 btnToggle.innerText = "ليس لديك حساب؟ أنشئ حساباً جديداً";
             }
         }
 
-        function showError(msg) {
-            const errEl = document.getElementById('error-msg');
-            errEl.innerText = msg;
-            errEl.classList.remove('hidden');
-            document.getElementById('btn-submit').innerText = isSignUp ? "إنشاء الحساب" : "دخول";
-            document.getElementById('btn-submit').disabled = false;
-        }
-
         function handleAuth() {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-pass').value.trim();
             const name = document.getElementById('user-name').value.trim();
-            const uni = document.getElementById('user-uni').value.trim();
 
             if (!email || !pass) return showError("يرجى ملء الحقول المطلوبة.");
-            if (isSignUp && (!name || !uni)) return showError("يرجى كتابة اسمك الثلاثي واسم الجامعة.");
+            if (isSignUp && !name) return showError("يرجى كتابة اسمك الثلاثي.");
 
             document.getElementById('btn-submit').innerText = "جاري التحميل...";
             document.getElementById('btn-submit').disabled = true;
             
-            isAuthProcessing = true; // 👈 نوقف الفحص التلقائي
+            isAuthProcessing = true; 
 
             if (isSignUp) {
                 auth.createUserWithEmailAndPassword(email, pass).then((cred) => {
@@ -142,14 +130,13 @@
                     const now = Date.now();
                     db.ref('students/' + uid).set({
                         name: name,
-                        university: uni, 
                         email: email,
                         isPaid: false,
                         deviceId: localDeviceId, 
-                        platform: "web",
+                        platform: "web", 
                         lastDeviceReset: now,
-                        registeredAt: now,
-                        // توحيد الإحصائيات مع تطبيق الاندرويد
+                        registeredAt: now, 
+                        // توحيد الإحصائيات بالضبط مثل الاندرويد
                         stats: {
                             totalQuizzes: 0,
                             totalScore: 0,
@@ -158,16 +145,16 @@
                             lastSubmitTime: now
                         }
                     }).then(() => {
-                        isAuthProcessing = false; 
+                        isAuthProcessing = false;
                         checkUserStatus(uid);
                     });
                 }).catch((error) => {
-                    isAuthProcessing = false; // نرجع نشغله بحالة الخطأ
+                    isAuthProcessing = false; 
                     showError(translateError(error.code));
                 });
             } else {
                 auth.signInWithEmailAndPassword(email, pass).then((cred) => {
-                    isAuthProcessing = false; // نرجع نشغل الفحص
+                    isAuthProcessing = false; 
                     checkUserStatus(cred.user.uid);
                 }).catch((error) => {
                     isAuthProcessing = false;
