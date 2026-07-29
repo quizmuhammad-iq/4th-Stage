@@ -195,10 +195,9 @@
 
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
-            // حساب العدد الكلي للأسئلة
             const totalQs = scorePercent > 0 ? Math.round((correctCount * 100) / scorePercent) : (correctCount || 1);
 
-            // 1. نقرأ نتيجته القديمة لنفس الكوز (إذا موجودة)
+            // 1. فحص النتيجة السابقة
             db.ref('results/' + quizId + '/' + uid).once('value').then((resSnap) => {
                 let oldQuizScore = 0;
                 let oldQuizTotal = 0;
@@ -210,15 +209,26 @@
                     oldQuizScore = pastResult.score || 0;
                     oldQuizTotal = pastResult.total || 0;
 
-                    // إذا إجابته الحالية مو أحسن من القديمة، نوقف الرفع ونبلغه
                     if (correctCount <= oldQuizScore) {
+                        // مزامنة الاسم حتى لو ما كسر رقمه (نفس حركة الاندرويد)
+                        db.ref('students/' + uid).once('value').then(snap => {
+                            if(snap.exists() && snap.val().stats){
+                                let avg = snap.val().stats.averagePercent || 0;
+                                let stuName = snap.val().name || "طالب مجهول";
+                                db.ref('public_leaderboard/' + uid).update({
+                                    name: stuName,
+                                    score: avg,
+                                    lastSubmitTime: Date.now()
+                                });
+                            }
+                        });
                         alert("✅ تم الرفع! لم تكسب نقاط جديدة لأن درجتك السابقة أعلى أو مساوية.");
                         window.location.href = "main.html";
                         return; 
                     }
                 }
 
-                // 2. نقرأ بيانات الطالب والإحصائيات الخاصة بي
+                // 2. تحديث الإحصائيات التراكمية
                 db.ref('students/' + uid).once('value').then((studentSnap) => {
                     let data = studentSnap.val() || {};
                     let stats = data.stats || { totalQuizzes: 0, totalScore: 0, totalQuestions: 0, averagePercent: 0 };
@@ -227,7 +237,6 @@
                     let sScore = stats.totalScore || 0;
                     let sTotal = stats.totalQuestions || 0;
 
-                    // الحساب التراكمي للإحصائيات
                     if (isNewQuiz) {
                         qCount += 1;
                         sScore += correctCount;
@@ -241,7 +250,7 @@
 
                     let updates = {};
                     
-                    // تحديث إحصائيات الطالب بنفس مسارات الاندرويد
+                    // مسارات الـ stats المطابقة للاندرويد
                     updates['students/' + uid + '/stats/totalQuizzes'] = qCount;
                     updates['students/' + uid + '/stats/totalScore'] = sScore;
                     updates['students/' + uid + '/stats/totalQuestions'] = sTotal;
@@ -260,16 +269,13 @@
                     };
                     
                     updates['results/' + quizId + '/' + uid] = resultData;
-                    
-                    // إضافة الرفع لليدربورد الخاص بالكوز (كان مفقود بالموقع)
                     updates['leaderboard/' + quizId + '/' + uid] = resultData;
 
-                    // تحديث الليدربورد العام (يعتمد على المعدل مو النقاط مثل الاندرويد)
+                    // تحديث الليدربورد العام (يعتمد على المعدل averagePercent مو عدد الصح)
                     updates['public_leaderboard/' + uid + '/score'] = newAvg;
                     updates['public_leaderboard/' + uid + '/name'] = data.name || "طالب مجهول";
                     updates['public_leaderboard/' + uid + '/lastSubmitTime'] = Date.now();
 
-                    // حفظ الأخطاء محلياً
                     if (mistakes && mistakes.length > 0) {
                         let localMistakes = JSON.parse(localStorage.getItem('savedMistakes')) || [];
                         mistakes.forEach(m => {
