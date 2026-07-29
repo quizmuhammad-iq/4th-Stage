@@ -234,6 +234,21 @@
                 updates['students/' + uid + '/totalCorrectAnswers'] = newCorrect;
                 updates['students/' + uid + '/totalScore'] = newTotalScore;
                 updates['students/' + uid + '/quizScores'] = quizScores; // حفظ سجل أعلى الدرجات
+
+                // إضافة النتيجة لسجل الكوز حتى تظهر ببرنامج الأدمن
+                // تم استخدام عملية حسابية لاستخراج عدد الأسئلة الكلي (total) من النسبة المئوية
+                let totalQs = score > 0 ? Math.round((correctCount * 100) / score) : correctCount;
+                
+                updates['results/' + quizId + '/' + uid] = {
+                    studentName: data.name || "طالب مجهول",
+                    uid: uid,
+                    subject: document.title || "اختبار",
+                    quizId: quizId,
+                    score: correctCount, // عدد الصح
+                    total: totalQs, // عدد الأسئلة الكلي
+                    percentage: score, // النسبة المئوية
+                    submittedAt: Date.now() // وقت الإرسال بالملي ثانية
+                };
                 
                 // 3. تحديث لوحة الصدارة بالنقاط الحقيقية المحمية
                 updates['public_leaderboard/' + uid + '/score'] = newTotalScore;
