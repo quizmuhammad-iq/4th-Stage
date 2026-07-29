@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ministquiz-v1.1';
+const CACHE_NAME = 'ministquiz-v1.2';
 // قائمة الملفات اللي نريد نحفظها بالذاكرة (بدون سلاش وبدون ملف الأخطاء الممسوح)
 const urlsToCache = [
     './',
