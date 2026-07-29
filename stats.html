@@ -123,7 +123,7 @@
             db.ref('students/' + uid).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     const studentData = snapshot.val();
-                    const stats = studentData.stats || {};
+                    const stats = studentData.stats || {}; // سحب البيانات من مجلد stats
                     
                     document.getElementById('total-quizzes').innerText = stats.totalQuizzes || 0;
                     document.getElementById('correct-answers').innerText = stats.totalScore || 0;
