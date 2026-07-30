@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>تسجيل الدخول - المرحلة الرابعة</title>
     
-    <!-- إعدادات تطبيق الويب (PWA) للأندرويد -->
     <link rel="manifest" href="manifest.json">
-    <!-- إعدادات تطبيق الويب للايفون (iOS) -->
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,7 +24,6 @@
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6" oncontextmenu="return false;">
-    <!-- جدار الحماية ضد تعطيل الجافا سكريبت -->
     <noscript>
         <style>
             body { display: none !important; }
@@ -42,7 +39,6 @@
         <h1 id="form-title" class="text-2xl font-bold mb-2">تسجيل الدخول</h1>
         <p id="error-msg" class="text-red-500 text-sm text-center hidden w-full p-2 bg-red-500/20 rounded-lg"></p>
 
-        <!-- حقول إنشاء الحساب (مخفية بالبداية) -->
         <input type="text" id="user-name" placeholder="الاسم الثلاثي" class="input-field w-full rounded-xl p-4 hidden">
         <input type="text" id="user-uni" placeholder="الجامعة أو الكلية (مثال: كلية الإسراء الجامعة)" class="input-field w-full rounded-xl p-4 hidden text-right" dir="rtl">
         
@@ -148,7 +144,6 @@
                         platform: "web", 
                         lastDeviceReset: now,
                         registeredAt: now, 
-                        // توحيد الإحصائيات بالضبط مثل الاندرويد
                         stats: {
                             totalQuizzes: 0,
                             totalScore: 0,
