@@ -25,7 +25,6 @@
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6" oncontextmenu="return false;">
-    <!-- جدار الحماية ضد تعطيل الجافا سكريبت -->
     <noscript>
         <style>
             body { display: none !important; }
@@ -62,7 +61,6 @@
     </div>
 
     <script>
-        // ⚠️ ضع مفاتيح الفايربيس الخاصة بك هنا
         const firebaseConfig = {
             apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
             authDomain: "ministquiz.firebaseapp.com",
@@ -107,7 +105,6 @@
                 if (snapshot.exists()) {
                     const codeData = snapshot.val();
                     if (codeData.used === false) {
-                        // تحديث حالة الكود وتفعيل الطالب بنفس الوقت
                         let updates = {};
                         updates['activation_codes/' + codeInput + '/used'] = true;
                         updates['activation_codes/' + codeInput + '/usedBy'] = currentUserUid;
@@ -144,23 +141,19 @@
         }
     </script>
     <script>
-        // 1. منع الكليك الأيمن واختصارات الكيبورد كلياً
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false; // منع F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; // منع Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; // منع Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 85) return false; // منع Ctrl+U
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; 
+            if(e.ctrlKey && e.keyCode == 85) return false; 
         };
 
-        // 2. فخ أدوات المطور (Debugger Trap)
-        // هذا الكود يشتغل كل ثانية، إذا الطالب فتح الـ Console راح يوكف المتصفح لحظياً وتنكشف محاولته
         setInterval(function() {
             let before = new Date().getTime();
-            debugger; // هذا الأمر يوقف المتصفح إذا أدوات المطور مفتوحة
+            debugger; 
             let after = new Date().getTime();
             if (after - before > 100) {
-                // إذا تم اكتشاف فتح أدوات المطور، يتم إغلاق الشاشة
                 document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:3rem; font-weight:bold;'>⛔ محاولة غش مكتشفة! الرجاء إغلاق أدوات المطور.</h1>";
                 window.location.replace("about:blank");
             }
