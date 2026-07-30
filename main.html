@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>تطبيق المرحلة الرابعة</title>
     
-    <!-- إعدادات تطبيق الويب (PWA) للأندرويد -->
     <link rel="manifest" href="manifest.json">
-    <!-- إعدادات تطبيق الويب للايفون (iOS) -->
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -38,7 +36,6 @@
     </style>
 </head>
 <body class="flex flex-col min-h-screen" oncontextmenu="return false;">
-    <!-- جدار الحماية ضد تعطيل الجافا سكريبت -->
     <noscript>
         <style>
             body { display: none !important; }
@@ -46,7 +43,6 @@
         <meta http-equiv="refresh" content="0; url=about:blank">
     </noscript>
 
-    <!-- الهيدر -->
     <header class="flex justify-between items-center p-4 bg-[#0D1B2E] border-b border-[#1E3350]">
         <div class="flex items-center gap-3">
             <div id="header-icon" class="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center text-2xl">🧲</div>
@@ -63,18 +59,14 @@
         </div>
     </header>
 
-    <!-- أزرار تبديل الكورسات -->
     <div id="term-toggle-container" class="flex p-4 bg-[#0D1B2E]">
         <button id="btn-term-2" onclick="switchTerm(2)" class="flex-1 py-2 font-bold rounded-xl term-inactive transition-all">الكورس الثاني</button>
         <button id="btn-term-1" onclick="switchTerm(1)" class="flex-1 py-2 font-bold rounded-xl mr-2 term-active transition-all">الكورس الأول</button>
     </div>
 
-    <!-- شريط التبويبات (المواد) -->
     <div id="tabs-container" class="flex overflow-x-auto bg-[#0D1B2E] border-b border-[#1E3350] p-2 whitespace-nowrap">
-        <!-- يتم توليد المواد برمجياً هنا -->
     </div>
 
-    <!-- حاوية المحتوى -->
     <main id="main-content" class="flex-1 p-4 overflow-y-auto pb-20">
         <div class="text-center mt-10 text-[#8899AA]">جاري تحميل البيانات...</div>
     </main>
@@ -114,11 +106,9 @@
 
         let currentTerm = 1;
 
-        let currentUserData = null; // متغير عالمي لحفظ بيانات الطالب (الاسم وحالة الدفع)
-
+        let currentUserData = null; 
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // 1. مستمع الحظر
                 db.ref('banned_devices/' + user.uid).on('value', (banSnap) => {
                     if (banSnap.exists()) {
                         auth.signOut().then(() => {
@@ -128,10 +118,9 @@
                     }
                 });
 
-                // 2. مستمع التصفير وسحب بيانات الطالب
                 db.ref('students/' + user.uid).on('value', (snapshot) => {
                     if (snapshot.exists()) {
-                        currentUserData = snapshot.val(); // 👈 حفظنا البيانات هنا علمود قسم "حول"
+                        currentUserData = snapshot.val(); 
                         if (!currentUserData.deviceId) {
                             auth.signOut().then(() => {
                                 alert("تم تصفير جهازك، يرجى تسجيل الدخول لإعادة الربط.");
@@ -146,10 +135,8 @@
                     }
                 });
 
-                // 3. مستمع وضع الصيانة (يقفل الموقع فوراً إذا الأدمن فعله)
                 db.ref('app_control/maintenance_mode').on('value', (snap) => {
                     if (snap.val() === true) {
-                        // مسح محتوى الشاشة وعرض رسالة الصيانة
                         document.body.innerHTML = `
                             <div style="display:flex; height:100vh; background-color:#0D1B2E; color:white; align-items:center; justify-content:center; flex-direction:column; padding:20px; text-align:center;">
                                 <span style="font-size:70px; margin-bottom:20px;">🛠</span>
@@ -160,7 +147,6 @@
                     }
                 });
 
-                // تشغيل واجهة الكورسات (وظيفة الصفحة)
                 switchTerm(1);
             } else {
                 window.location.href = "index.html";
@@ -253,10 +239,8 @@
             iconDiv.innerText = "ℹ";
             iconDiv.className = `w-12 h-12 rounded-2xl flex items-center justify-center text-2xl bg-[#C9A84C] text-[#0D1B2E]`;
 
-            // بناء قسم الترقية والصلاحيات
             let upgradeSection = "";
             if (currentUserData && currentUserData.isPaid) {
-                // إذا الطالب مفعل النسخة الكاملة
                 upgradeSection = `
                     <div class="w-full bg-[#152238] border border-[#C9A84C] rounded-xl p-4 mb-5 flex flex-col items-center shadow-lg">
                         <h3 class="text-white font-bold text-lg mb-1">👑 ${currentUserData.name}</h3>
@@ -264,7 +248,6 @@
                     </div>
                 `;
             } else {
-                // إذا الطالب مجاني
                 upgradeSection = `
                     <button onclick="window.location.href='payment.html'" class="w-full bg-gradient-to-r from-[#C9A84C] to-[#F59E0B] text-[#0D1B2E] font-bold py-4 rounded-xl mb-5 flex justify-center items-center gap-2 shadow-lg active:scale-95 transition-transform">
                         <span>الترقية إلى النسخة الكاملة</span> <span class="text-xl">🔓</span>
@@ -280,7 +263,7 @@
                     <p class="text-[#C9A84C] text-sm mb-4">المرحلة الرابعة - قسم الأشعة</p>
                     <div class="w-full h-px bg-[#1E3350] mb-5"></div>
                     
-                    <!-- عرض حالة الحساب هنا -->
+                    
                     ${upgradeSection}
                     
                     <p class="text-sm text-gray-300 leading-relaxed mb-2">يحتوي هذا التطبيق على مواد الكورس الأول والكورس الثاني لمساعدتك في اجتياز الامتحانات بنجاح.</p>
@@ -313,7 +296,6 @@
     </script>
 
     <script>
-        // 1. منع الكليك الأيمن واختصارات الكيبورد كلياً
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if(e.keyCode == 123) return false; 
@@ -322,7 +304,7 @@
             if(e.ctrlKey && e.keyCode == 85) return false; 
         };
 
-        // 2. فخ أدوات المطور (Debugger Trap)
+        
         setInterval(function() {
             let before = new Date().getTime();
             debugger; 
@@ -335,7 +317,7 @@
     </script>
     
     <script>
-        // تسجيل الـ Service Worker لتفعيل التثبيت PWA
+        
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch((error) => {
