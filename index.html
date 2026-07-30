@@ -44,7 +44,7 @@
 
         <!-- حقول إنشاء الحساب (مخفية بالبداية) -->
         <input type="text" id="user-name" placeholder="الاسم الثلاثي" class="input-field w-full rounded-xl p-4 hidden">
-        <input type="text" id="user-uni" placeholder="الجامعة أو الكلية (مثال: كلية الإسراء الجامعة)" class="input-field w-full rounded-xl p-4 hidden">
+        <input type="text" id="user-uni" placeholder="الجامعة أو الكلية (مثال: كلية الإسراء الجامعة)" class="input-field w-full rounded-xl p-4 hidden text-right" dir="rtl">
         
         <input type="email" id="user-email" placeholder="البريد الإلكتروني" class="input-field w-full rounded-xl p-4 text-left" dir="ltr">
         <input type="password" id="user-pass" placeholder="كلمة المرور (6 أحرف على الأقل)" class="input-field w-full rounded-xl p-4 text-left" dir="ltr">
@@ -75,7 +75,7 @@
         const db = firebase.database();
 
         let isSignUp = false;
-        let isAuthProcessing = false; // 👈 المتغير المنقذ
+        let isAuthProcessing = false;
 
         let localDeviceId = localStorage.getItem('web_device_id');
         if (!localDeviceId) {
@@ -83,7 +83,6 @@
             localStorage.setItem('web_device_id', localDeviceId);
         }
 
-        // الفحص التلقائي يشتغل فقط إذا الطالب مو جاي يسجل يدوياً بلحظتها
         auth.onAuthStateChanged((user) => {
             if (user && !isAuthProcessing) {
                 checkUserStatus(user.uid);
@@ -94,30 +93,42 @@
             isSignUp = !isSignUp;
             document.getElementById('error-msg').classList.add('hidden');
             const nameInput = document.getElementById('user-name');
+            const uniInput = document.getElementById('user-uni');
             const title = document.getElementById('form-title');
             const btnSubmit = document.getElementById('btn-submit');
             const btnToggle = document.getElementById('btn-toggle');
 
             if (isSignUp) {
                 nameInput.classList.remove('hidden');
+                uniInput.classList.remove('hidden');
                 title.innerText = "إنشاء حساب جديد";
                 btnSubmit.innerText = "إنشاء الحساب";
                 btnToggle.innerText = "لديك حساب بالفعل؟ سجل دخولك";
             } else {
                 nameInput.classList.add('hidden');
+                uniInput.classList.add('hidden');
                 title.innerText = "تسجيل الدخول";
                 btnSubmit.innerText = "دخول";
                 btnToggle.innerText = "ليس لديك حساب؟ أنشئ حساباً جديداً";
             }
         }
 
+        function showError(msg) {
+            const errEl = document.getElementById('error-msg');
+            errEl.innerText = msg;
+            errEl.classList.remove('hidden');
+            document.getElementById('btn-submit').innerText = isSignUp ? "إنشاء الحساب" : "دخول";
+            document.getElementById('btn-submit').disabled = false;
+        }
+
         function handleAuth() {
             const email = document.getElementById('user-email').value.trim();
             const pass = document.getElementById('user-pass').value.trim();
             const name = document.getElementById('user-name').value.trim();
+            const uni = document.getElementById('user-uni').value.trim();
 
             if (!email || !pass) return showError("يرجى ملء الحقول المطلوبة.");
-            if (isSignUp && !name) return showError("يرجى كتابة اسمك الثلاثي.");
+            if (isSignUp && (!name || !uni)) return showError("يرجى كتابة اسمك الثلاثي واسم الجامعة.");
 
             document.getElementById('btn-submit').innerText = "جاري التحميل...";
             document.getElementById('btn-submit').disabled = true;
@@ -130,6 +141,7 @@
                     const now = Date.now();
                     db.ref('students/' + uid).set({
                         name: name,
+                        university: uni, 
                         email: email,
                         isPaid: false,
                         deviceId: localDeviceId, 
@@ -163,16 +175,13 @@
             }
         }
         function checkUserStatus(uid) {
-            // الفحص الأول: نتأكد من جدول الحظر أولاً
             db.ref('banned_devices/' + uid).once('value').then((banSnap) => {
                 if (banSnap.exists()) {
                     auth.signOut();
-                    isAuthProcessing = false; // تحرير المتغير المنقذ
-                    // نعرض رسالة الحظر اللي جايتك من الفايربيس
+                    isAuthProcessing = false;
                     return showError(banSnap.val() || "تم حظر هذا الحساب ولا يمكنك استخدام التطبيق."); 
                 }
 
-                // الفحص الثاني: إذا مو محظور، نفحص جهازه بجدول الطلاب
                 db.ref('students/' + uid).once('value').then((snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
@@ -245,7 +254,6 @@
     </script>
 
     <script>
-        // 1. منع الكليك الأيمن واختصارات الكيبورد كلياً
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if(e.keyCode == 123) return false; 
@@ -254,7 +262,6 @@
             if(e.ctrlKey && e.keyCode == 85) return false; 
         };
 
-        // 2. فخ أدوات المطور (Debugger Trap)
         setInterval(function() {
             let before = new Date().getTime();
             debugger; 
@@ -267,7 +274,6 @@
     </script>
     
     <script>
-        // تسجيل الـ Service Worker لتفعيل التثبيت PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch((error) => {
