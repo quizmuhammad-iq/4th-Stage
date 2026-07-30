@@ -42,7 +42,6 @@
 </head>
 <body oncontextmenu="return false;">
 
-    <!-- جدار الحماية ضد تعطيل الجافا سكريبت -->
     <noscript>
         <style>
             body { display: none !important; }
@@ -54,7 +53,6 @@
     <iframe id="quiz-frame" src=""></iframe>
 
     <script>
-        // ⚠️ مفاتيح الفايربيس
         const firebaseConfig = {
             apiKey: "AIzaSyDogRarkXKNLUMZKRbq9cQBHxD1OZkj17A",
             authDomain: "ministquiz.firebaseapp.com",
@@ -78,7 +76,6 @@
 
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // مستمع الحظر
                 db.ref('banned_devices/' + user.uid).on('value', (banSnap) => {
                     if (banSnap.exists()) {
                         auth.signOut().then(() => {
@@ -88,7 +85,6 @@
                     }
                 });
 
-                // مستمع التصفير والحذف
                 db.ref('students/' + user.uid).on('value', (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
@@ -106,7 +102,6 @@
                     }
                 });
 
-                // تشغيل الكوز (وظيفة الصفحة)
                 if (quizId) {
                     loadQuizData(quizId);
                 } else {
@@ -197,7 +192,6 @@
             const quizId = urlParams.get('id');
             const totalQs = scorePercent > 0 ? Math.round((correctCount * 100) / scorePercent) : (correctCount || 1);
 
-            // 1. فحص النتيجة السابقة
             db.ref('results/' + quizId + '/' + uid).once('value').then((resSnap) => {
                 let oldQuizScore = 0;
                 let oldQuizTotal = 0;
@@ -210,7 +204,6 @@
                     oldQuizTotal = pastResult.total || 0;
 
                     if (correctCount <= oldQuizScore) {
-                        // مزامنة الاسم حتى لو ما كسر رقمه (نفس حركة الاندرويد)
                         db.ref('students/' + uid).once('value').then(snap => {
                             if(snap.exists() && snap.val().stats){
                                 let avg = snap.val().stats.averagePercent || 0;
@@ -228,7 +221,6 @@
                     }
                 }
 
-                // 2. تحديث الإحصائيات التراكمية
                 db.ref('students/' + uid).once('value').then((studentSnap) => {
                     let data = studentSnap.val() || {};
                     let stats = data.stats || { totalQuizzes: 0, totalScore: 0, totalQuestions: 0, averagePercent: 0 };
@@ -250,7 +242,6 @@
 
                     let updates = {};
                     
-                    // مسارات الـ stats المطابقة للاندرويد
                     updates['students/' + uid + '/stats/totalQuizzes'] = qCount;
                     updates['students/' + uid + '/stats/totalScore'] = sScore;
                     updates['students/' + uid + '/stats/totalQuestions'] = sTotal;
@@ -271,7 +262,6 @@
                     updates['results/' + quizId + '/' + uid] = resultData;
                     updates['leaderboard/' + quizId + '/' + uid] = resultData;
 
-                    // تحديث الليدربورد العام (يعتمد على المعدل averagePercent مو عدد الصح)
                     updates['public_leaderboard/' + uid + '/score'] = newAvg;
                     updates['public_leaderboard/' + uid + '/name'] = data.name || "طالب مجهول";
                     updates['public_leaderboard/' + uid + '/lastSubmitTime'] = Date.now();
@@ -297,16 +287,14 @@
     </script>
 
     <script>
-        // 1. منع الكليك الأيمن واختصارات الكيبورد كلياً
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false; // منع F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; // منع Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; // منع Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 85) return false; // منع Ctrl+U
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; 
+            if(e.ctrlKey && e.keyCode == 85) return false; 
         };
 
-        // 2. فخ أدوات المطور (Debugger Trap)
         setInterval(function() {
             let before = new Date().getTime();
             debugger; 
