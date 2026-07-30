@@ -1,5 +1,4 @@
-const CACHE_NAME = 'ministquiz-v1.3';
-// قائمة الملفات اللي نريد نحفظها بالذاكرة (بدون سلاش وبدون ملف الأخطاء الممسوح)
+const CACHE_NAME = 'ministquiz-v1.4';
 const urlsToCache = [
     './',
     'index.html',
@@ -22,7 +21,6 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request).then(response => {
-            // إذا الملف موجود بالكاش، جيبه، وإذا لا، حمله من النت
             return response || fetch(event.request);
         })
     );
