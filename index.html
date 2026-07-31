@@ -14,14 +14,9 @@
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('sys_token');
     
-    const _0x1a = [30, 40, 59, 61, 53, 52]; 
-    let _0xauth = false;
+    const hash = s => s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0);
 
-    if (token && token.length === 6) {
-        _0xauth = token.split('').every((c, i) => (c.charCodeAt(0) ^ 90) === _0x1a[i]);
-    }
-
-    if (_0xauth) {
+    if (token && hash(token) === 2042557628) {
         localStorage.setItem('_sys_cfg_88', 'true');
     }
 
@@ -35,7 +30,7 @@
             <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif;'>
                 <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
                 <h1 style='color:#F44336; font-size:2rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
-                <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل برنامج الأندرويد.</p>
+                <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
             </body>
         `;
         window.stop();
