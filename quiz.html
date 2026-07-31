@@ -303,8 +303,9 @@
         }
     </script>
 
-    <script>
+        <script>
         document.addEventListener('contextmenu', event => event.preventDefault());
+        
         document.onkeydown = function(e) {
             if(e.keyCode == 123) return false; 
             if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; 
@@ -316,11 +317,18 @@
             let before = new Date().getTime();
             debugger; 
             let after = new Date().getTime();
-            if (after - before > 100) {
-                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:3rem; font-weight:bold;'>⛔ محاولة غش مكتشفة! الرجاء إغلاق أدوات المطور.</h1>";
-                window.location.replace("about:blank");
+            
+            if (after - before > 1500) {
+                document.body.innerHTML = `
+                    <div style='background-color:#0D1B2E; position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99999;'>
+                        <div style='font-size:5rem; margin-bottom:20px;'>⛔</div>
+                        <h1 style='color:#F44336; text-align:center; font-size:2rem; font-weight:bold; padding:20px; line-height: 1.5;'>
+                            محاولة غش أو فحص مكتشفة!<br>الرجاء إغلاق أدوات المطور وتحديث الصفحة.
+                        </h1>
+                    </div>
+                `;
             }
         }, 1000);
-    </script>
+        </script>
 </body>
 </html>
