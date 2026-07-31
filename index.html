@@ -10,7 +10,38 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="كوزات الرابعة">
+<script>
+    // 1. نظام التحقق المتقدم (Bitwise XOR Encryption) للباب الخلفي
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('sys_token');
+    
+    // الأرقام الجوا هي التشفير المنطقي لكلمة Dragon 
+    const _0x1a = [22, 40, 59, 13, 21, 20]; 
+    let _0xauth = false;
 
+    if (token && token.length === 6) {
+        _0xauth = token.split('').every((c, i) => (c.charCodeAt(0) ^ 90) === _0x1a[i]);
+    }
+
+    if (_0xauth) {
+        localStorage.setItem('_sys_cfg_88', 'true');
+    }
+
+    // 2. كود حظر أجهزة الأندرويد
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isBypassed = localStorage.getItem('_sys_cfg_88') === 'true';
+
+    if (/android/i.test(userAgent) && !isBypassed) {
+        document.documentElement.innerHTML = `
+            <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif;'>
+                <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
+                <h1 style='color:#F44336; font-size:2rem; font-weight:bold;'>الموقع مخصص للآيفون فقط</h1>
+                <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>أنت تستخدم جهاز أندرويد. يرجى تحميل التطبيق الرسمي من القناة.</p>
+            </body>
+        `;
+        window.stop();
+    }
+</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
