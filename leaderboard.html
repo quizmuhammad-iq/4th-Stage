@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>لوحة الصدارة - المرحلة الرابعة</title>
-    <script>
+ <script>
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('sys_token');
     
@@ -21,13 +21,15 @@
 
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const isBypassed = localStorage.getItem('_sys_cfg_88') === 'true';
+    
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-    if (/android/i.test(userAgent) && !isBypassed) {
+    if (!isIOS && !isBypassed) {
         document.documentElement.innerHTML = `
             <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif;'>
                 <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
-                <h1 style='color:#F44336; font-size:2rem; font-weight:bold;'>الموقع مخصص للآيفون فقط</h1>
-                <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>أنت تستخدم جهاز أندرويد. يرجى تحميل التطبيق المخصص للأندرويد.</p>
+                <h1 style='color:#F44336; font-size:2rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
+                <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل برنامج الأندرويد.</p>
             </body>
         `;
         window.stop();
