@@ -212,13 +212,12 @@
             }
         });
 
-        function saveResultToFirebase(scorePercent, correctCount, mistakes) {
-            const uid = auth.currentUser.uid;
-            const banner = document.getElementById('timer-banner');
-            banner.classList.remove('hidden');
-            banner.innerText = "جاري الرفع وحفظ الأخطاء...";
-            banner.style.backgroundColor = "#4CAF50"; 
-
+        function saveResultToFirebase(scorePercent, correctCount) {
+    const uid = auth.currentUser.uid;
+    const banner = document.getElementById('timer-banner');
+    banner.classList.remove('hidden');
+    banner.innerText = "جاري رفع النتيجة..."; 
+    banner.style.backgroundColor = "#4CAF50";
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
             const totalQs = scorePercent > 0 ? Math.round((correctCount * 100) / scorePercent) : (correctCount || 1);
@@ -296,14 +295,6 @@
                     updates['public_leaderboard/' + uid + '/score'] = newAvg;
                     updates['public_leaderboard/' + uid + '/name'] = data.name || "طالب مجهول";
                     updates['public_leaderboard/' + uid + '/lastSubmitTime'] = Date.now();
-
-                    if (mistakes && mistakes.length > 0) {
-                        let localMistakes = JSON.parse(localStorage.getItem('savedMistakes')) || [];
-                        mistakes.forEach(m => {
-                            localMistakes.push({ question: m.question, studentAnswer: m.studentChoice, correctAnswer: m.correctAnswer });
-                        });
-                        localStorage.setItem('savedMistakes', JSON.stringify(localMistakes));
-                    }
 
                     db.ref().update(updates).then(() => {
                         let msg = isNewQuiz ? `✅ تم الرفع! معدلك العام أصبح ${newAvg}%` : `✅ تم كسر رقمك القياسي! معدلك ارتفع إلى ${newAvg}%`;
