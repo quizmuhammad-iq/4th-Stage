@@ -160,24 +160,34 @@
 banner.classList.remove('hidden');
 banner.innerText = "جاري تحميل الكوز...";
 
-fetch(quiz.fileUrl)
-    .then(response => {
+function fetchQuizWithRetry(url, retries = 3) {
+    return fetch(url).then(response => {
         if (!response.ok) throw new Error("فشل التحميل من السيرفر");
         return response.text();
-    })
+    }).catch(err => {
+        if (retries > 0) {
+            banner.innerText = `النت ضعيف.. جاري إعادة المحاولة (${retries})...`;
+            return new Promise(resolve => setTimeout(resolve, 2000))
+                .then(() => fetchQuizWithRetry(url, retries - 1));
+        }
+        throw err;
+    });
+}
+
+fetchQuizWithRetry(quiz.fileUrl)
     .then(html => {
         const iframe = document.getElementById('quiz-frame');
-        iframe.removeAttribute('src'); // إزالة الرابط القديم لمنع التعارض
-        iframe.srcdoc = html; // حقن الكود مباشرة
+        iframe.removeAttribute('src'); 
+        iframe.srcdoc = html; 
         
-        banner.classList.add('hidden'); // إخفاء رسالة التحميل
+        banner.classList.add('hidden'); 
         
         if (quiz.duration && quiz.duration > 0) {
             startTimer(quiz.duration);
         }
     })
     .catch(err => {
-        alert("حدث خطأ بتحميل الكوز، تأكد من اتصالك بالإنترنت أو إعدادات الـ CORS.");
+        alert("الإنترنت عندك ضعيف جداً أو فاصل. ما كدرنا نحمل الكوز، حاول مرة ثانية.");
         window.location.href = "main.html";
     });
                     } else {
