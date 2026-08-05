@@ -27,7 +27,6 @@
                 <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
             </body>
         `;
-        window.stop();
     }
 </script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -178,7 +177,11 @@ fetchQuizWithRetry(quiz.fileUrl)
     .then(html => {
         const iframe = document.getElementById('quiz-frame');
         iframe.removeAttribute('src'); 
-        iframe.srcdoc = html; 
+        
+        const iframeDoc = iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(html);
+        iframeDoc.close();
         
         banner.classList.add('hidden'); 
         
