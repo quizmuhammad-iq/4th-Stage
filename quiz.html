@@ -27,6 +27,7 @@
                 <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
             </body>
         `;
+        window.stop();
     }
 </script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -137,6 +138,7 @@
                 window.location.href = "index.html";
             }
         });
+
         function loadQuizData(id) {
             const uid = auth.currentUser.uid;
 
@@ -156,43 +158,42 @@
 
                         document.title = quiz.title || 'اختبار';
                         const banner = document.getElementById('timer-banner');
-banner.classList.remove('hidden');
-banner.innerText = "جاري تحميل الكوز...";
+                        banner.classList.remove('hidden');
+                        banner.innerText = "جاري تحميل الكوز...";
 
-function fetchQuizWithRetry(url, retries = 3) {
-    return fetch(url).then(response => {
-        if (!response.ok) throw new Error("فشل التحميل من السيرفر");
-        return response.text();
-    }).catch(err => {
-        if (retries > 0) {
-            banner.innerText = `النت ضعيف.. جاري إعادة المحاولة (${retries})...`;
-            return new Promise(resolve => setTimeout(resolve, 2000))
-                .then(() => fetchQuizWithRetry(url, retries - 1));
-        }
-        throw err;
-    });
-}
+                        function fetchQuizWithRetry(url, retries = 3) {
+                            return fetch(url).then(response => {
+                                if (!response.ok) throw new Error("فشل التحميل من السيرفر");
+                                return response.text();
+                            }).catch(err => {
+                                if (retries > 0) {
+                                    banner.innerText = `النت ضعيف.. جاري إعادة المحاولة (${retries})...`;
+                                    return new Promise(resolve => setTimeout(resolve, 2000))
+                                        .then(() => fetchQuizWithRetry(url, retries - 1));
+                                }
+                                throw err;
+                            });
+                        }
 
-fetchQuizWithRetry(quiz.fileUrl)
-    .then(html => {
-        const iframe = document.getElementById('quiz-frame');
-        iframe.removeAttribute('src'); 
-        
-        const iframeDoc = iframe.contentWindow.document;
-        iframeDoc.open();
-        iframeDoc.write(html);
-        iframeDoc.close();
-        
-        banner.classList.add('hidden'); 
-        
-        if (quiz.duration && quiz.duration > 0) {
-            startTimer(quiz.duration);
-        }
-    })
-    .catch(err => {
-        alert("الإنترنت عندك ضعيف جداً أو فاصل. ما كدرنا نحمل الكوز، حاول مرة ثانية.");
-        window.location.href = "main.html";
-    });
+                        fetchQuizWithRetry(quiz.fileUrl)
+                            .then(html => {
+                                const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+                                const blobUrl = URL.createObjectURL(blob);
+                                
+                                const iframe = document.getElementById('quiz-frame');
+                                iframe.removeAttribute('src'); 
+                                iframe.src = blobUrl;
+                                
+                                banner.classList.add('hidden'); 
+                                
+                                if (quiz.duration && quiz.duration > 0) {
+                                    startTimer(quiz.duration);
+                                }
+                            })
+                            .catch(err => {
+                                alert("الإنترنت عندك ضعيف جداً أو فاصل. ما كدرنا نحمل الكوز، حاول مرة ثانية.");
+                                window.location.href = "main.html";
+                            });
                     } else {
                         alert("هذا الاختبار غير موجود أو تم حذفه.");
                         window.location.href = "main.html";
@@ -240,11 +241,11 @@ fetchQuizWithRetry(quiz.fileUrl)
         });
 
         function saveResultToFirebase(scorePercent, correctCount) {
-    const uid = auth.currentUser.uid;
-    const banner = document.getElementById('timer-banner');
-    banner.classList.remove('hidden');
-    banner.innerText = "جاري رفع النتيجة..."; 
-    banner.style.backgroundColor = "#4CAF50";
+            const uid = auth.currentUser.uid;
+            const banner = document.getElementById('timer-banner');
+            banner.classList.remove('hidden');
+            banner.innerText = "جاري رفع النتيجة..."; 
+            banner.style.backgroundColor = "#4CAF50";
             const urlParams = new URLSearchParams(window.location.search);
             const quizId = urlParams.get('id');
             const totalQs = scorePercent > 0 ? Math.round((correctCount * 100) / scorePercent) : (correctCount || 1);
@@ -335,7 +336,7 @@ fetchQuizWithRetry(quiz.fileUrl)
         }
     </script>
 
-        <script>
+    <script>
         document.addEventListener('contextmenu', event => event.preventDefault());
         
         document.onkeydown = function(e) {
@@ -361,6 +362,6 @@ fetchQuizWithRetry(quiz.fileUrl)
                 `;
             }
         }, 1000);
-        </script>
+    </script>
 </body>
 </html>
