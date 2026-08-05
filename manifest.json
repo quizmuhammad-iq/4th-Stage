@@ -1,6 +1,6 @@
 {
-  "name": "كوزات المرحلة الرابعة",
-  "short_name": "المرحلة الرابعة",
+  "name": "MinistQuiz For iPhone",
+  "short_name": "MinistQuiz",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0D1B2E",
