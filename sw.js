@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ministquiz-v1.8';
+const CACHE_NAME = 'ministquiz-v1.9';
 const urlsToCache = [
     './',
     'index.html',
