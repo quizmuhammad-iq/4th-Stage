@@ -156,11 +156,30 @@
                         }
 
                         document.title = quiz.title || 'اختبار';
-                        document.getElementById('quiz-frame').src = quiz.fileUrl;
-                        
-                        if (quiz.duration && quiz.duration > 0) {
-                            startTimer(quiz.duration);
-                        }
+                        const banner = document.getElementById('timer-banner');
+banner.classList.remove('hidden');
+banner.innerText = "جاري تحميل الكوز...";
+
+fetch(quiz.fileUrl)
+    .then(response => {
+        if (!response.ok) throw new Error("فشل التحميل من السيرفر");
+        return response.text();
+    })
+    .then(html => {
+        const iframe = document.getElementById('quiz-frame');
+        iframe.removeAttribute('src'); // إزالة الرابط القديم لمنع التعارض
+        iframe.srcdoc = html; // حقن الكود مباشرة
+        
+        banner.classList.add('hidden'); // إخفاء رسالة التحميل
+        
+        if (quiz.duration && quiz.duration > 0) {
+            startTimer(quiz.duration);
+        }
+    })
+    .catch(err => {
+        alert("حدث خطأ بتحميل الكوز، تأكد من اتصالك بالإنترنت أو إعدادات الـ CORS.");
+        window.location.href = "main.html";
+    });
                     } else {
                         alert("هذا الاختبار غير موجود أو تم حذفه.");
                         window.location.href = "main.html";
