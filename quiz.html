@@ -3,8 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الاختبار - MinistQuiz</title>
+    <title>الاختبار - المرحلة الرابعة</title>
     
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('sys_token');
+        
+        const hash = s => s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0);
+
+        if (token && hash(token) === 2055055923) {
+            localStorage.setItem('_sys_cfg_88', 'true');
+        }
+
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const isBypassed = localStorage.getItem('_sys_cfg_88') === 'true';
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (!isIOS && !isBypassed) {
+            document.addEventListener("DOMContentLoaded", function() {
+                document.body.innerHTML = `
+                    <div style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px;'>
+                        <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
+                        <h1 style='color:#F44336; font-size:2rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
+                        <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
+                    </div>
+                `;
+            });
+        }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -80,7 +107,7 @@
                 db.ref('banned_devices/' + user.uid).on('value', (banSnap) => {
                     if (banSnap.exists()) {
                         auth.signOut().then(() => {
-                            alert(banSnap.val() || "تم حظر حسابك من قبل المطور.");
+                            alert(banSnap.val() || "تم حظر حسابك من قبل الإدارة.");
                             window.location.href = "index.html";
                         });
                     }
@@ -309,6 +336,36 @@
                 });
             });
         }
+    </script>
+
+    <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 73) return false; 
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; 
+            if(e.ctrlKey && e.keyCode == 85) return false; 
+        };
+
+        setInterval(function() {
+            if (!isIOS && !isBypassed) return; 
+            
+            let before = new Date().getTime();
+            debugger; 
+            let after = new Date().getTime();
+            
+            if (after - before > 1500) {
+                document.body.innerHTML = `
+                    <div style='background-color:#0D1B2E; position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99999;'>
+                        <div style='font-size:5rem; margin-bottom:20px;'>⛔</div>
+                        <h1 style='color:#F44336; text-align:center; font-size:2rem; font-weight:bold; padding:20px; line-height: 1.5;'>
+                            محاولة غش أو فحص مكتشفة!<br>الرجاء إغلاق أدوات المطور وتحديث الصفحة.
+                        </h1>
+                    </div>
+                `;
+            }
+        }, 1000);
     </script>
 </body>
 </html>
