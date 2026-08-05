@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الاختبار - المرحلة الرابعة</title>
+    <title>الاختبار - MinistQuiz</title>
     <script>
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('sys_token');
@@ -105,7 +105,7 @@
                 db.ref('banned_devices/' + user.uid).on('value', (banSnap) => {
                     if (banSnap.exists()) {
                         auth.signOut().then(() => {
-                            alert(banSnap.val() || "تم حظر حسابك من قبل الإدارة.");
+                            alert(banSnap.val() || "تم حظر حسابك من قبل المطور.");
                             window.location.href = "index.html";
                         });
                     }
