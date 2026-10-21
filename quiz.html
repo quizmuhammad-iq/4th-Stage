@@ -36,6 +36,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
     
     <style>
         body {
@@ -95,11 +96,11 @@
         
         const auth = firebase.auth();
         const db = firebase.database();
+        firebase.analytics();
 
         let timerInterval;
         let scoreSubmitted = false;
 
-        const urlParams = new URLSearchParams(window.location.search);
         const quizId = urlParams.get('id');
 
         auth.onAuthStateChanged((user) => {
@@ -248,8 +249,9 @@
             banner.classList.remove('hidden');
             banner.innerText = "جاري رفع النتيجة..."; 
             banner.style.backgroundColor = "#4CAF50";
-            const urlParams = new URLSearchParams(window.location.search);
-            const quizId = urlParams.get('id');
+            
+            // سحب اسم القسم من الرابط
+            const subjectName = urlParams.get('subject') || document.title || "عام";
             const totalQs = scorePercent > 0 ? Math.round((correctCount * 100) / scorePercent) : (correctCount || 1);
 
             db.ref('results/' + quizId + '/' + uid).once('value').then((resSnap) => {
@@ -311,7 +313,7 @@
                     let resultData = {
                         studentName: data.name || "طالب مجهول",
                         uid: uid,
-                        subject: document.title || "اختبار",
+                        subject: subjectName, // تم تطبيق اسم القسم الحقيقي هنا
                         quizId: quizId,
                         score: correctCount,
                         total: totalQs,
