@@ -37,9 +37,11 @@
     }
 </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- مكتبات الفايربيس مع التحليلات -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
     
     <style>
         body { background-color: #0D1B2E; color: white; user-select: none; -webkit-touch-callout: none; }
@@ -68,7 +70,17 @@
         <input type="text" id="user-uni" placeholder="الجامعة أو الكلية (مثال: جامعة الهادي)" class="input-field w-full rounded-xl p-4 hidden text-right" dir="rtl">
         
         <input type="email" id="user-email" placeholder="البريد الإلكتروني" class="input-field w-full rounded-xl p-4 text-left" dir="ltr">
-        <input type="password" id="user-pass" placeholder="كلمة المرور (6 أحرف على الأقل)" class="input-field w-full rounded-xl p-4 text-left" dir="ltr">
+        
+        <!-- حقل الباسورد مع أيقونة الإظهار والإخفاء -->
+        <div class="relative w-full">
+            <input type="password" id="user-pass" placeholder="كلمة المرور (6 أحرف على الأقل)" class="input-field w-full rounded-xl p-4 text-left pr-12" dir="ltr">
+            <span onclick="togglePassword()" id="eye-icon" class="absolute right-4 top-[50%] translate-y-[-50%] cursor-pointer text-xl select-none">👁️</span>
+        </div>
+        
+        <!-- زر نسيت كلمة المرور -->
+        <button id="btn-forgot" onclick="resetPassword()" class="text-[#29B6F6] text-sm w-full text-right hover:text-white transition mt-[-5px]">
+            نسيت كلمة المرور؟
+        </button>
 
         <button id="btn-submit" onclick="handleAuth()" class="w-full bg-[#C9A84C] text-[#0D1B2E] font-bold rounded-xl p-4 mt-2 hover:bg-yellow-500 transition">
             دخول
@@ -94,9 +106,11 @@
         
         const auth = firebase.auth();
         const db = firebase.database();
+        firebase.analytics(); // تفعيل التحليلات
 
         let isSignUp = false;
         let isAuthProcessing = false;
+        let isPasswordVisible = false;
 
         let localDeviceId = localStorage.getItem('web_device_id');
         if (!localDeviceId) {
@@ -110,11 +124,38 @@
             }
         });
 
+        function togglePassword() {
+            isPasswordVisible = !isPasswordVisible;
+            const passInput = document.getElementById('user-pass');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (isPasswordVisible) {
+                passInput.type = 'text';
+                eyeIcon.innerText = '🙈';
+            } else {
+                passInput.type = 'password';
+                eyeIcon.innerText = '👁️';
+            }
+        }
+
+        function resetPassword() {
+            const email = document.getElementById('user-email').value.trim();
+            const targetEmail = email || prompt("أدخل بريدك الإلكتروني المسجل لدينا:");
+            
+            if (targetEmail && targetEmail !== "") {
+                auth.sendPasswordResetEmail(targetEmail).then(() => {
+                    alert("تم إرسال رابط إعادة تعيين كلمة المرور إلى إيميلك بنجاح (راجع صندوق الوارد أو الـ Spam).");
+                }).catch((error) => {
+                    showError("خطأ: " + translateError(error.code));
+                });
+            }
+        }
+
         function toggleMode() {
             isSignUp = !isSignUp;
             document.getElementById('error-msg').classList.add('hidden');
             const nameInput = document.getElementById('user-name');
             const uniInput = document.getElementById('user-uni');
+            const btnForgot = document.getElementById('btn-forgot');
             const title = document.getElementById('form-title');
             const btnSubmit = document.getElementById('btn-submit');
             const btnToggle = document.getElementById('btn-toggle');
@@ -122,12 +163,14 @@
             if (isSignUp) {
                 nameInput.classList.remove('hidden');
                 uniInput.classList.remove('hidden');
+                btnForgot.classList.add('hidden');
                 title.innerText = "إنشاء حساب جديد";
                 btnSubmit.innerText = "إنشاء الحساب";
                 btnToggle.innerText = "لديك حساب بالفعل؟ سجل دخولك";
             } else {
                 nameInput.classList.add('hidden');
                 uniInput.classList.add('hidden');
+                btnForgot.classList.remove('hidden');
                 title.innerText = "تسجيل الدخول";
                 btnSubmit.innerText = "دخول";
                 btnToggle.innerText = "ليس لديك حساب؟ أنشئ حساباً جديداً";
