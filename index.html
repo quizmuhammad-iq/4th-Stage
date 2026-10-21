@@ -204,6 +204,7 @@
                     const uid = cred.user.uid;
                     const now = Date.now();
                     db.ref('students/' + uid).set({
+                        uid: uid,
                         name: name,
                         university: uni, 
                         email: email,
