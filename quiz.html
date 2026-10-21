@@ -273,6 +273,7 @@
                                 db.ref('public_leaderboard/' + uid).update({
                                     name: stuName,
                                     score: avg,
+                                    averagePercent: avg,
                                     lastSubmitTime: Date.now()
                                 });
                             }
@@ -325,6 +326,7 @@
                     updates['leaderboard/' + quizId + '/' + uid] = resultData;
 
                     updates['public_leaderboard/' + uid + '/score'] = newAvg;
+                    updates['public_leaderboard/' + uid + '/averagePercent'] = newAvg;
                     updates['public_leaderboard/' + uid + '/name'] = data.name || "طالب مجهول";
                     updates['public_leaderboard/' + uid + '/lastSubmitTime'] = Date.now();
 
