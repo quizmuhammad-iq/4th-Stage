@@ -132,7 +132,8 @@
                     else if (index === 2) { rankClass = "rank-3"; rankIcon = "🥉"; }
 
                     const name = student.name || "طالب مجهول";
-                    const score = student.score || 0;
+                    // أخذ القيمة الأعلى لضمان تطابق الأرقام مع تطبيق الأندرويد
+                    const score = Math.max((student.score || 0), (student.averagePercent || 0));
                     
                     const cardHTML = `
                         <div class="card rounded-2xl p-4 mb-3 flex items-center shadow-lg transition-transform">
