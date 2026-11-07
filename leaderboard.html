@@ -69,9 +69,15 @@
                 <p class="text-xs text-[#8899AA]">أفضل 50 طالب</p>
             </div>
         </div>
-        <button onclick="window.location.href='main.html'" class="text-2xl cursor-pointer bg-[#152238] w-10 h-10 rounded-full flex items-center justify-center border border-[#2A3F58]">
-            ❮
-        </button>
+        <div class="flex items-center gap-2">
+            <!-- زر التحديث الجديد -->
+            <button onclick="loadLeaderboard()" class="text-xs font-bold text-[#000000] bg-[#C9A84C] px-3 py-2 rounded-lg active:scale-95 transition-transform">
+                تحديث اللوحة 🔄
+            </button>
+            <button onclick="window.location.href='main.html'" class="text-2xl cursor-pointer bg-[#152238] w-10 h-10 rounded-full flex items-center justify-center border border-[#2A3F58]">
+                ❮
+            </button>
+        </div>
     </header>
 
     <main id="leaderboard-container" class="flex-1 p-4 overflow-y-auto pb-10">
