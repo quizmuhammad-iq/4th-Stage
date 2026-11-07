@@ -208,9 +208,14 @@
         function startTimer(minutes) {
             const banner = document.getElementById('timer-banner');
             banner.classList.remove('hidden');
-            let timeRemaining = minutes * 60; 
+            
+            // حساب وقت الانتهاء الفعلي الثابت (نفس فكرة الأندرويد)
+            const endTime = Date.now() + (minutes * 60 * 1000); 
 
             timerInterval = setInterval(() => {
+                // نحسب الوقت المتبقي بناءً على وقت الجهاز، حتى لو طلع من المتصفح ورجع
+                let timeRemaining = Math.floor((endTime - Date.now()) / 1000);
+
                 if (timeRemaining <= 0) {
                     clearInterval(timerInterval);
                     banner.innerText = "انتهى الوقت!";
@@ -219,7 +224,6 @@
                     let m = Math.floor(timeRemaining / 60);
                     let s = timeRemaining % 60;
                     banner.innerText = `الوقت المتبقي: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                    timeRemaining--;
                 }
             }, 1000);
         }
