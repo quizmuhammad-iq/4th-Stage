@@ -13,7 +13,6 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('sys_token');
-    
     const hash = s => s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0);
 
     if (token && hash(token) === 2055055923) {
@@ -22,15 +21,32 @@
 
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     const isBypassed = localStorage.getItem('_sys_cfg_88') === 'true';
-    
     const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 
     if (!isIOS && !isBypassed) {
         document.documentElement.innerHTML = `
-            <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif;'>
+            <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif; direction:rtl;'>
                 <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
-                <h1 style='color:#F44336; font-size:2rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
-                <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
+                <h1 style='color:#F44336; font-size:1.8rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
+                <p style='color:#8899AA; font-size:1.1rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل تطبيق الأندرويد.</p>
+            </body>
+        `;
+        window.stop();
+    } else if (isIOS && !isStandalone && !isBypassed) {
+        document.documentElement.innerHTML = `
+            <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; text-align:center; padding:25px; font-family:sans-serif; direction:rtl; margin:0;'>
+                <img src='icon-192.png' style='width:90px; height:90px; border-radius:20px; border:2px solid #C9A84C; margin-bottom:20px;'>
+                <h1 style='color:#C9A84C; font-size:1.6rem; font-weight:bold; margin-bottom:10px;'>تثبيت التطبيق إجباري</h1>
+                <p style='color:#AABBCC; font-size:1rem; line-height:1.6; max-width:350px; margin-bottom:25px;'>
+                    لضمان عدم قفل حسابك وحفظ بياناتك، يجب إضافة الموقع إلى الشاشة الرئيسية وفتحه كتطبيق:
+                </p>
+                <div style='background:#152238; border:1px solid #2A3F58; border-radius:16px; padding:20px; text-align:right; width:100%; max-width:340px; line-height:2; font-size:0.95rem;'>
+                    <div>1️⃣ افتح الرابط في متصفح <b>Safari</b> (وليس داخل التليجرام).</div>
+                    <div>2️⃣ اضغط على زر المشاركة <b>(Share ⬆️)</b> أسفل الشاشة.</div>
+                    <div>3️⃣ اختر <b>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</b>.</div>
+                    <div>4️⃣ أغلق المتصفح وافتح التطبيق من الأيقونة الجديدة.</div>
+                </div>
             </body>
         `;
         window.stop();
@@ -318,11 +334,11 @@
         }
 
         function logout() {
-            auth.signOut().then(() => {
-                localStorage.clear();
-                window.location.href = "index.html";
-            });
-        }
+    auth.signOut().then(() => {
+        localStorage.removeItem('isPaid'); // نمسح حالة الاشتراك فقط ونبقي الـ deviceId
+        window.location.href = "index.html";
+    });
+}
     </script>
 
     <script>
