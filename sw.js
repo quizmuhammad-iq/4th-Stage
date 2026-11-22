@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ministquiz-v2.6';
+const CACHE_NAME = 'ministquiz-v2.7';
 const urlsToCache = [
     './',
     'index.html',
@@ -28,7 +28,6 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-    // لا تتدخل بطلبات الفايربيس أو الطلبات غير الـ GET حتى ما يبطأ الموقع
     if (event.request.method !== 'GET' || event.request.url.includes('firebase') || event.request.url.includes('googleapis')) {
         return;
     }
