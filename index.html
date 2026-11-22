@@ -10,50 +10,55 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MinistQuiz">
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('sys_token');
-    const hash = s => s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0);
 
-    if (token && hash(token) === 2055055923) {
-        localStorage.setItem('_sys_cfg_88', 'true');
-    }
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('sys_token');
+        const hash = s => s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0);
 
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const isBypassed = localStorage.getItem('_sys_cfg_88') === 'true';
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+        if (token && hash(token) === 2055055923) {
+            localStorage.setItem('_sys_cfg_88', 'true');
+        }
 
-    if (!isIOS && !isBypassed) {
-        document.documentElement.innerHTML = `
-            <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif; direction:rtl;'>
-                <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
-                <h1 style='color:#F44336; font-size:1.8rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
-                <p style='color:#8899AA; font-size:1.1rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل تطبيق الأندرويد.</p>
-            </body>
-        `;
-        window.stop();
-    } else if (isIOS && !isStandalone && !isBypassed) {
-        document.documentElement.innerHTML = `
-            <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; text-align:center; padding:25px; font-family:sans-serif; direction:rtl; margin:0;'>
-                <img src='icon-192.png' style='width:90px; height:90px; border-radius:20px; border:2px solid #C9A84C; margin-bottom:20px;'>
-                <h1 style='color:#C9A84C; font-size:1.6rem; font-weight:bold; margin-bottom:10px;'>تثبيت التطبيق إجباري</h1>
-                <p style='color:#AABBCC; font-size:1rem; line-height:1.6; max-width:350px; margin-bottom:25px;'>
-                    لضمان عدم قفل حسابك وحفظ بياناتك، يجب إضافة الموقع إلى الشاشة الرئيسية وفتحه كتطبيق:
-                </p>
-                <div style='background:#152238; border:1px solid #2A3F58; border-radius:16px; padding:20px; text-align:right; width:100%; max-width:340px; line-height:2; font-size:0.95rem;'>
-                    <div>1️⃣ افتح الرابط في متصفح <b>Safari</b> (وليس داخل التليجرام).</div>
-                    <div>2️⃣ اضغط على زر المشاركة <b>(Share ⬆️)</b> أسفل الشاشة.</div>
-                    <div>3️⃣ اختر <b>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</b>.</div>
-                    <div>4️⃣ أغلق المتصفح وافتح التطبيق من الأيقونة الجديدة.</div>
-                </div>
-            </body>
-        `;
-        window.stop();
-    }
-</script>
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const isBypassed = localStorage.getItem('_sys_cfg_88') === 'true';
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
+        if (!isIOS && !isBypassed) {
+            window._blockApp = true;
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.innerHTML = `
+                    <div style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; width:100%; text-align:center; padding:20px; font-family:sans-serif; direction:rtl; position:fixed; top:0; left:0; z-index:99999; box-sizing:border-box;'>
+                        <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
+                        <h1 style='color:#F44336; font-size:1.8rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
+                        <p style='color:#8899AA; font-size:1.1rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
+                    </div>
+                `;
+            });
+        } else if (isIOS && !isStandalone && !isBypassed) {
+            window._blockApp = true;
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.innerHTML = `
+                    <div style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; width:100%; text-align:center; padding:25px; font-family:sans-serif; direction:rtl; position:fixed; top:0; left:0; z-index:99999; box-sizing:border-box;'>
+                        <img src='icon-192.png' style='width:90px; height:90px; border-radius:20px; border:2px solid #C9A84C; margin-bottom:20px;'>
+                        <h1 style='color:#C9A84C; font-size:1.6rem; font-weight:bold; margin-bottom:10px;'>تثبيت التطبيق إجباري</h1>
+                        <p style='color:#AABBCC; font-size:1rem; line-height:1.6; max-width:350px; margin-bottom:25px;'>
+                            لضمان عدم قفل حسابك وحفظ بياناتك، يجب إضافة الموقع إلى الشاشة الرئيسية وفتحه كتطبيق:
+                        </p>
+                        <div style='background:#152238; border:1px solid #2A3F58; border-radius:16px; padding:20px; text-align:right; width:100%; max-width:340px; line-height:2; font-size:0.95rem;'>
+                            <div>1️⃣ افتح الرابط في متصفح <b>Safari</b> (وليس داخل التليجرام).</div>
+                            <div>2️⃣ اضغط على زر المشاركة <b>(Share ⬆️)</b> أسفل الشاشة.</div>
+                            <div>3️⃣ اختر <b>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</b> وتأكد من تفعيل خيار <b>فتح كتطبيق ويب</b>.</div>
+                            <div>4️⃣ أغلق المتصفح وافتح التطبيق من الأيقونة الجديدة.</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- مكتبات الفايربيس مع التحليلات -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -87,13 +92,11 @@
         
         <input type="email" id="user-email" placeholder="البريد الإلكتروني" class="input-field w-full rounded-xl p-4 text-left" dir="ltr">
         
-        <!-- حقل الباسورد مع أيقونة الإظهار والإخفاء -->
         <div class="relative w-full">
             <input type="password" id="user-pass" placeholder="كلمة المرور (6 أحرف على الأقل)" class="input-field w-full rounded-xl p-4 text-left pr-12" dir="ltr">
             <span onclick="togglePassword()" id="eye-icon" class="absolute right-4 top-[50%] translate-y-[-50%] cursor-pointer text-xl select-none">👁️</span>
         </div>
         
-        <!-- زر نسيت كلمة المرور -->
         <button id="btn-forgot" onclick="resetPassword()" class="text-[#29B6F6] text-sm w-full text-right hover:text-white transition mt-[-5px]">
             نسيت كلمة المرور؟
         </button>
@@ -122,7 +125,7 @@
         
         const auth = firebase.auth();
         const db = firebase.database();
-        firebase.analytics(); // تفعيل التحليلات
+        firebase.analytics();
 
         let isSignUp = false;
         let isAuthProcessing = false;
@@ -135,6 +138,7 @@
         }
 
         auth.onAuthStateChanged((user) => {
+            if (window._blockApp) return;
             if (user && !isAuthProcessing) {
                 checkUserStatus(user.uid);
             }
@@ -254,6 +258,7 @@
                 });
             }
         }
+
         function checkUserStatus(uid) {
             db.ref('banned_devices/' + uid).once('value').then((banSnap) => {
                 if (banSnap.exists()) {
@@ -319,6 +324,7 @@
                 showError(error.message);
             });
         }
+
         function proceedToApp(isPaid) {
             localStorage.setItem('isPaid', isPaid === true ? 'true' : 'false');
             window.location.href = isPaid ? "main.html" : "payment.html";
