@@ -18,17 +18,34 @@
         const userAgent = navigator.userAgent || navigator.vendor || window.opera;
         const isBypassed = localStorage.getItem('_sys_cfg_88') === 'true';
         const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
 
         if (!isIOS && !isBypassed) {
-            document.addEventListener("DOMContentLoaded", function() {
-                document.body.innerHTML = `
-                    <div style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px;'>
-                        <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
-                        <h1 style='color:#F44336; font-size:2rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
-                        <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
+            document.documentElement.innerHTML = `
+                <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif; direction:rtl;'>
+                    <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
+                    <h1 style='color:#F44336; font-size:1.8rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
+                    <p style='color:#8899AA; font-size:1.1rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
+                </body>
+            `;
+            window.stop();
+        } else if (isIOS && !isStandalone && !isBypassed) {
+            document.documentElement.innerHTML = `
+                <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; text-align:center; padding:25px; font-family:sans-serif; direction:rtl; margin:0;'>
+                    <img src='icon-192.png' style='width:90px; height:90px; border-radius:20px; border:2px solid #C9A84C; margin-bottom:20px;'>
+                    <h1 style='color:#C9A84C; font-size:1.6rem; font-weight:bold; margin-bottom:10px;'>تثبيت التطبيق إجباري</h1>
+                    <p style='color:#AABBCC; font-size:1rem; line-height:1.6; max-width:350px; margin-bottom:25px;'>
+                        لضمان عدم قفل حسابك وحفظ بياناتك، يجب إضافة الموقع إلى الشاشة الرئيسية وفتحه كتطبيق:
+                    </p>
+                    <div style='background:#152238; border:1px solid #2A3F58; border-radius:16px; padding:20px; text-align:right; width:100%; max-width:340px; line-height:2; font-size:0.95rem;'>
+                        <div>1️⃣ افتح الرابط في متصفح <b>Safari</b> (وليس داخل التليجرام).</div>
+                        <div>2️⃣ اضغط على زر المشاركة <b>(Share ⬆️)</b> أسفل الشاشة.</div>
+                        <div>3️⃣ اختر <b>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</b>.</div>
+                        <div>4️⃣ أغلق المتصفح وافتح التطبيق من الأيقونة الجديدة.</div>
                     </div>
-                `;
-            });
+                </body>
+            `;
+            window.stop();
         }
     </script>
 
@@ -43,27 +60,37 @@
             margin: 0;
             padding: 0;
             background-color: #0D1B2E;
-            overflow: hidden; 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             -webkit-touch-callout: none;
         }
+        #top-bar {
+            background-color: #0D1B2E;
+            border-bottom: 1px solid #1E3350;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+        }
         #timer-banner {
             background-color: #F44336;
             color: white;
-            text-align: center;
-            padding: 12px;
+            padding: 6px 14px;
+            border-radius: 10px;
             font-weight: bold;
-            font-size: 18px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            z-index: 50;
-            position: relative;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         iframe {
             width: 100%;
-            height: calc(100vh - 52px); 
+            flex: 1;
             border: none;
             background-color: white;
         }
@@ -78,8 +105,14 @@
         <meta http-equiv="refresh" content="0; url=about:blank">
     </noscript>
 
-    <div id="timer-banner" class="hidden">جاري تحميل الوقت...</div>
-    <iframe id="quiz-frame" src=""></iframe>
+    <div id="top-bar">
+        <button onclick="exitQuiz()" class="bg-[#152238] border border-[#2A3F58] text-white px-4 py-2 rounded-xl font-bold text-sm active:scale-95 transition">
+            ❮ رجوع
+        </button>
+        <div id="timer-banner" class="hidden">جاري التحميل...</div>
+    </div>
+
+    <iframe id="quiz-frame"></iframe>
 
     <script>
         const firebaseConfig = {
@@ -102,6 +135,13 @@
         let scoreSubmitted = false;
 
         const quizId = urlParams.get('id');
+
+        function exitQuiz() {
+            if (confirm("هل أنت متأكد من الخروج من الاختبار؟ لن يتم حفظ إجاباتك الحالية.")) {
+                if (timerInterval) clearInterval(timerInterval);
+                window.location.href = "main.html";
+            }
+        }
 
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -144,64 +184,55 @@
 
         function loadQuizData(id) {
             const uid = auth.currentUser.uid;
+            const banner = document.getElementById('timer-banner');
+            banner.classList.remove('hidden');
+            banner.style.backgroundColor = "#1E3350";
+            banner.innerText = "جاري التحميل...";
 
-            db.ref('students/' + uid).once('value').then((studentSnap) => {
-                const studentData = studentSnap.val() || {};
-                const isPaid = studentData.isPaid === true;
+            Promise.all([
+                db.ref('students/' + uid + '/isPaid').once('value'),
+                db.ref('quizzes/' + id).once('value')
+            ]).then(([paidSnap, quizSnap]) => {
+                const isPaid = paidSnap.val() === true;
 
-                db.ref('quizzes/' + id).once('value').then((quizSnap) => {
-                    if (quizSnap.exists()) {
-                        let quiz = quizSnap.val();
-                        
-                        if (!quiz.free && !isPaid) {
-                            alert("⛔ محتوى مقفول! لا يمكنك الوصول لهذا الاختبار عبر الرابط المباشر.");
-                            window.location.href = "payment.html";
-                            return; 
+                if (!quizSnap.exists()) {
+                    alert("هذا الاختبار غير موجود أو تم حذفه.");
+                    window.location.href = "main.html";
+                    return;
+                }
+
+                const quiz = quizSnap.val();
+                if (!quiz.free && !isPaid) {
+                    alert("⛔ محتوى مقفول! لا يمكنك الوصول لهذا الاختبار عبر الرابط المباشر.");
+                    window.location.href = "payment.html";
+                    return;
+                }
+
+                document.title = quiz.title || 'اختبار';
+
+                fetch(quiz.fileUrl)
+                    .then(res => {
+                        if (!res.ok) throw new Error("فشل التحميل من السيرفر");
+                        return res.text();
+                    })
+                    .then(html => {
+                        const iframe = document.getElementById('quiz-frame');
+                        iframe.srcdoc = html;
+
+                        if (quiz.duration && quiz.duration > 0) {
+                            banner.style.backgroundColor = "#F44336";
+                            startTimer(quiz.duration);
+                        } else {
+                            banner.classList.add('hidden');
                         }
-
-                        document.title = quiz.title || 'اختبار';
-                        const banner = document.getElementById('timer-banner');
-                        banner.classList.remove('hidden');
-                        banner.innerText = "جاري تحميل الكوز...";
-
-                        function fetchQuizWithRetry(url, retries = 3) {
-                            return fetch(url).then(response => {
-                                if (!response.ok) throw new Error("فشل التحميل من السيرفر");
-                                return response.text();
-                            }).catch(err => {
-                                if (retries > 0) {
-                                    banner.innerText = `النت ضعيف.. جاري إعادة المحاولة (${retries})...`;
-                                    return new Promise(resolve => setTimeout(resolve, 2000))
-                                        .then(() => fetchQuizWithRetry(url, retries - 1));
-                                }
-                                throw err;
-                            });
-                        }
-
-                        fetchQuizWithRetry(quiz.fileUrl)
-                            .then(html => {
-                                const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-                                const blobUrl = URL.createObjectURL(blob);
-                                
-                                const iframe = document.getElementById('quiz-frame');
-                                iframe.removeAttribute('src'); 
-                                iframe.src = blobUrl;
-                                
-                                banner.classList.add('hidden'); 
-                                
-                                if (quiz.duration && quiz.duration > 0) {
-                                    startTimer(quiz.duration);
-                                }
-                            })
-                            .catch(err => {
-                                alert("الإنترنت عندك ضعيف جداً أو فاصل. ما كدرنا نحمل الكوز، حاول مرة ثانية.");
-                                window.location.href = "main.html";
-                            });
-                    } else {
-                        alert("هذا الاختبار غير موجود أو تم حذفه.");
+                    })
+                    .catch(() => {
+                        alert("تعذر تحميل الكوز، تأكد من اتصالك بالإنترنت وحاول مرة ثانية.");
                         window.location.href = "main.html";
-                    }
-                });
+                    });
+            }).catch(() => {
+                alert("حدث خطأ في الاتصال بقاعدة البيانات.");
+                window.location.href = "main.html";
             });
         }
 
@@ -209,11 +240,9 @@
             const banner = document.getElementById('timer-banner');
             banner.classList.remove('hidden');
             
-            // حساب وقت الانتهاء الفعلي الثابت (نفس فكرة الأندرويد)
             const endTime = Date.now() + (minutes * 60 * 1000); 
 
             timerInterval = setInterval(() => {
-                // نحسب الوقت المتبقي بناءً على وقت الجهاز، حتى لو طلع من المتصفح ورجع
                 let timeRemaining = Math.floor((endTime - Date.now()) / 1000);
 
                 if (timeRemaining <= 0) {
@@ -241,7 +270,7 @@
                 const correctCount = event.data.correctAnswers || 0; 
                 const mistakes = event.data.mistakes || []; 
                 
-                if(timerInterval) clearInterval(timerInterval);
+                if (timerInterval) clearInterval(timerInterval);
                 
                 saveResultToFirebase(score, correctCount, mistakes);
             }
@@ -254,7 +283,6 @@
             banner.innerText = "جاري رفع النتيجة..."; 
             banner.style.backgroundColor = "#4CAF50";
             
-            // سحب اسم القسم من الرابط
             const subjectName = urlParams.get('subject') || document.title || "عام";
             const totalQs = scorePercent > 0 ? Math.round((correctCount * 100) / scorePercent) : (correctCount || 1);
 
@@ -271,7 +299,7 @@
 
                     if (correctCount <= oldQuizScore) {
                         db.ref('students/' + uid).once('value').then(snap => {
-                            if(snap.exists() && snap.val().stats){
+                            if (snap.exists() && snap.val().stats) {
                                 let avg = snap.val().stats.averagePercent || 0;
                                 let stuName = snap.val().name || "طالب مجهول";
                                 db.ref('public_leaderboard/' + uid).update({
@@ -318,7 +346,7 @@
                     let resultData = {
                         studentName: data.name || "طالب مجهول",
                         uid: uid,
-                        subject: subjectName, // تم تطبيق اسم القسم الحقيقي هنا
+                        subject: subjectName,
                         quizId: quizId,
                         score: correctCount,
                         total: totalQs,
