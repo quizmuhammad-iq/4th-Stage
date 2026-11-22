@@ -4,32 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>لوحة الصدارة - MinistQuiz</title>
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('sys_token');
-    
-    const hash = s => s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0);
 
-    if (token && hash(token) === 2055055923) {
-        localStorage.setItem('_sys_cfg_88', 'true');
-    }
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="MinistQuiz">
 
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const isBypassed = localStorage.getItem('_sys_cfg_88') === 'true';
-    
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('sys_token');
+        const hash = s => s.split('').reduce((a,b) => (((a << 5) - a) + b.charCodeAt(0))|0, 0);
 
-    if (!isIOS && !isBypassed) {
-        document.documentElement.innerHTML = `
-            <body style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; padding:20px; font-family:sans-serif;'>
-                <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
-                <h1 style='color:#F44336; font-size:2rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
-                <p style='color:#8899AA; font-size:1.2rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
-            </body>
-        `;
-        window.stop();
-    }
-</script>
+        if (token && hash(token) === 2055055923) {
+            localStorage.setItem('_sys_cfg_88', 'true');
+        }
+
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const isBypassed = localStorage.getItem('_sys_cfg_88') === 'true';
+        const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
+        if (!isIOS && !isBypassed) {
+            window._blockApp = true;
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.innerHTML = `
+                    <div style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; width:100%; text-align:center; padding:20px; font-family:sans-serif; direction:rtl; position:fixed; top:0; left:0; z-index:99999; box-sizing:border-box;'>
+                        <div style='font-size:5rem; margin-bottom:20px;'>🚫</div>
+                        <h1 style='color:#F44336; font-size:1.8rem; font-weight:bold;'>الموقع مخصص لأجهزة الآيفون فقط</h1>
+                        <p style='color:#8899AA; font-size:1.1rem; margin-top:15px;'>لا يمكن الوصول للموقع من هذا الجهاز. يرجى استخدام جهاز آيفون أو تحميل البرنامج الخاص بنظام الاندرويد.</p>
+                    </div>
+                `;
+            });
+        } else if (isIOS && !isStandalone && !isBypassed) {
+            window._blockApp = true;
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.innerHTML = `
+                    <div style='background-color:#0D1B2E; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; width:100%; text-align:center; padding:25px; font-family:sans-serif; direction:rtl; position:fixed; top:0; left:0; z-index:99999; box-sizing:border-box;'>
+                        <img src='icon-192.png' style='width:90px; height:90px; border-radius:20px; border:2px solid #C9A84C; margin-bottom:20px;'>
+                        <h1 style='color:#C9A84C; font-size:1.6rem; font-weight:bold; margin-bottom:10px;'>تثبيت التطبيق إجباري</h1>
+                        <p style='color:#AABBCC; font-size:1rem; line-height:1.6; max-width:350px; margin-bottom:25px;'>
+                            لضمان عدم قفل حسابك وحفظ بياناتك، يجب إضافة الموقع إلى الشاشة الرئيسية وفتحه كتطبيق:
+                        </p>
+                        <div style='background:#152238; border:1px solid #2A3F58; border-radius:16px; padding:20px; text-align:right; width:100%; max-width:340px; line-height:2; font-size:0.95rem;'>
+                            <div>1️⃣ افتح الرابط في متصفح <b>Safari</b> (وليس داخل التليجرام).</div>
+                            <div>2️⃣ اضغط على زر المشاركة <b>(Share ⬆️)</b> أسفل الشاشة.</div>
+                            <div>3️⃣ اختر <b>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</b> وتأكد من تفعيل خيار <b>فتح كتطبيق ويب</b>.</div>
+                            <div>4️⃣ أغلق المتصفح وافتح التطبيق من الأيقونة الجديدة.</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -44,20 +72,16 @@
             -webkit-touch-callout: none;
         }
         .card { background-color: #152238; border: 1px solid #2A3F58; }
-        
         .rank-1 { background-color: #FFD700; color: #0D1B2E; border: none; }
         .rank-2 { background-color: #C0C0C0; color: #0D1B2E; border: none; }
         .rank-3 { background-color: #CD7F32; color: #0D1B2E; border: none; }
         .rank-normal { background-color: #1E3350; border: 1px solid #C9A84C; color: #C9A84C; }
-        
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen" oncontextmenu="return false;">
     <noscript>
-        <style>
-            body { display: none !important; }
-        </style>
+        <style>body { display: none !important; }</style>
         <meta http-equiv="refresh" content="0; url=about:blank">
     </noscript>
 
@@ -70,7 +94,6 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <!-- زر التحديث الجديد -->
             <button onclick="loadLeaderboard()" class="text-xs font-bold text-[#000000] bg-[#C9A84C] px-3 py-2 rounded-lg active:scale-95 transition-transform">
                 تحديث اللوحة 🔄
             </button>
@@ -117,8 +140,7 @@
 
                 let students = [];
                 snapshot.forEach((child) => {
-                    let student = child.val();
-                    students.push(student);
+                    students.push(child.val());
                 });
 
                 students.reverse();
@@ -132,7 +154,6 @@
                     else if (index === 2) { rankClass = "rank-3"; rankIcon = "🥉"; }
 
                     const name = student.name || "طالب مجهول";
-                    // أخذ القيمة الأعلى لضمان تطابق الأرقام مع تطبيق الأندرويد
                     const score = Math.max((student.score || 0), (student.averagePercent || 0));
                     
                     const cardHTML = `
@@ -142,9 +163,6 @@
                             </div>
                             <div class="flex-1 mr-4 text-right">
                                 <h2 class="font-bold text-md text-white">${name}</h2>
-                            </div>
-                            <div class="text-[#C9A84C] font-bold text-lg bg-[#0D1B2E] px-4 py-1 rounded-lg border border-[#2A3F58]">
-                                ${score}
                             </div>
                             <div class="text-[#C9A84C] font-bold text-lg bg-[#0D1B2E] px-4 py-1 rounded-lg border border-[#2A3F58]">
                                 ${score} نقطة
@@ -160,6 +178,7 @@
 
         const auth = firebase.auth();
         auth.onAuthStateChanged((user) => {
+            if (window._blockApp) return;
             if (user) {
                 db.ref('banned_devices/' + user.uid).on('value', (banSnap) => {
                     if (banSnap.exists()) {
@@ -193,6 +212,7 @@
             }
         });
     </script>
+
     <script>
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
@@ -201,16 +221,6 @@
             if(e.ctrlKey && e.shiftKey && e.keyCode == 74) return false; 
             if(e.ctrlKey && e.keyCode == 85) return false; 
         };
-
-        setInterval(function() {
-            let before = new Date().getTime();
-            debugger; 
-            let after = new Date().getTime();
-            if (after - before > 100) {
-                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:3rem; font-weight:bold;'>⛔ محاولة غش مكتشفة! الرجاء إغلاق أدوات المطور.</h1>";
-                window.location.replace("about:blank");
-            }
-        }, 1000);
     </script>
 </body>
 </html>
