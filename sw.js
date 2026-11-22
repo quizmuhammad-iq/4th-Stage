@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ministquiz-v2.4';
+const CACHE_NAME = 'ministquiz-v2.5';
 const urlsToCache = [
     './',
     'index.html',
@@ -13,20 +13,37 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
     );
 });
 
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(keys => Promise.all(
+            keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        ))
+    );
+});
+
 self.addEventListener('fetch', event => {
+    // لا تتدخل بطلبات الفايربيس أو الطلبات غير الـ GET حتى ما يبطأ الموقع
+    if (event.request.method !== 'GET' || event.request.url.includes('firebase') || event.request.url.includes('googleapis')) {
+        return;
+    }
+
     event.respondWith(
-        fetch(event.request).then(response => {
-            return caches.open(CACHE_NAME).then(cache => {
-                cache.put(event.request, response.clone());
-                return response;
-            });
-        }).catch(() => {
-            return caches.match(event.request);
+        caches.match(event.request).then(cachedResponse => {
+            const fetchPromise = fetch(event.request).then(networkResponse => {
+                if (networkResponse && networkResponse.status === 200) {
+                    const clone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                }
+                return networkResponse;
+            }).catch(() => cachedResponse);
+
+            return cachedResponse || fetchPromise;
         })
     );
 });
