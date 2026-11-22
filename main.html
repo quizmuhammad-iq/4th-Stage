@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="MinistQuiz">
 
     <script>
@@ -85,9 +85,7 @@
 </head>
 <body class="flex flex-col min-h-screen" oncontextmenu="return false;">
     <noscript>
-        <style>
-            body { display: none !important; }
-        </style>
+        <style>body { display: none !important; }</style>
         <meta http-equiv="refresh" content="0; url=about:blank">
     </noscript>
 
@@ -103,7 +101,7 @@
             <button onclick="showAbout()" class="text-sm font-bold text-[#C9A84C] bg-[#1E3350] px-3 py-1 rounded-lg border border-[#C9A84C]">حول</button>
             <button onclick="window.location.href='stats.html'" class="text-2xl cursor-pointer ml-1">📊</button>
             <button onclick="window.location.href='leaderboard.html'" class="text-2xl cursor-pointer ml-1">🏆</button>
-            <div class="text-2xl cursor-pointer" onclick="logout()">🚪</div>
+            <button onclick="logout()" class="text-2xl cursor-pointer">🚪</button>
         </div>
     </header>
 
@@ -112,8 +110,7 @@
         <button id="btn-term-1" onclick="switchTerm(1)" class="flex-1 py-2 font-bold rounded-xl mr-2 term-active transition-all">الكورس الأول</button>
     </div>
 
-    <div id="tabs-container" class="flex overflow-x-auto bg-[#0D1B2E] border-b border-[#1E3350] p-2 whitespace-nowrap">
-    </div>
+    <div id="tabs-container" class="flex overflow-x-auto bg-[#0D1B2E] border-b border-[#1E3350] p-2 whitespace-nowrap"></div>
 
     <main id="main-content" class="flex-1 p-4 overflow-y-auto pb-20">
         <div class="text-center mt-10 text-[#8899AA]">جاري تحميل البيانات...</div>
@@ -170,7 +167,8 @@
 
                 db.ref('students/' + user.uid).on('value', (snapshot) => {
                     if (snapshot.exists()) {
-                        currentUserData = snapshot.val(); 
+                        currentUserData = snapshot.val();
+                        localStorage.setItem('isPaid', currentUserData.isPaid === true ? 'true' : 'false');
                         if (!currentUserData.deviceId) {
                             auth.signOut().then(() => {
                                 alert("تم تصفير جهازك، يرجى تسجيل الدخول لإعادة الربط.");
@@ -358,18 +356,6 @@
             if(e.ctrlKey && e.keyCode == 85) return false; 
         };
 
-        setInterval(function() {
-            let before = new Date().getTime();
-            debugger; 
-            let after = new Date().getTime();
-            if (after - before > 100) {
-                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:3rem; font-weight:bold;'>⛔ محاولة غش مكتشفة! الرجاء إغلاق أدوات المطور.</h1>";
-                window.location.replace("about:blank");
-            }
-        }, 1000);
-    </script>
-    
-    <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch((error) => {
