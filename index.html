@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="MinistQuiz">
 
     <script>
@@ -65,7 +65,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
     
     <style>
-        body { background-color: #0D1B2E; color: white; user-select: none; -webkit-touch-callout: none; }
+        body { background-color: #0D1B2E; color: white; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+        input, textarea { user-select: text !important; -webkit-user-select: text !important; }
         .input-field { background-color: #152238; border: 1px solid #2A3F58; color: white; }
         .input-field:focus { outline: none; border-color: #C9A84C; }
         .card { background-color: #1E3350; }
@@ -73,9 +74,7 @@
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6" oncontextmenu="return false;">
     <noscript>
-        <style>
-            body { display: none !important; }
-        </style>
+        <style>body { display: none !important; }</style>
         <meta http-equiv="refresh" content="0; url=about:blank">
     </noscript>
 
@@ -348,18 +347,6 @@
             if(e.ctrlKey && e.keyCode == 85) return false; 
         };
 
-        setInterval(function() {
-            let before = new Date().getTime();
-            debugger; 
-            let after = new Date().getTime();
-            if (after - before > 100) {
-                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh; font-size:3rem; font-weight:bold;'>⛔ محاولة غش مكتشفة! الرجاء إغلاق أدوات المطور.</h1>";
-                window.location.replace("about:blank");
-            }
-        }, 1000);
-    </script>
-    
-    <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch((error) => {
